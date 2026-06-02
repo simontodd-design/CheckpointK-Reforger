@@ -8,8 +8,16 @@
       "build",
       ".svelte-kit",
       "**/*.gen.ts",
+      "**/*.svelte",
       "launcher/src-tauri/target",
-      "mod/**"
+      "launcher/.svelte-kit",
+      "launcher/build",
+      "launcher/src/**",
+      "manager/.svelte-kit",
+      "manager/build",
+      "manager/src/**",
+      "mod/**",
+      "design/**"
     ]
   },
   "vcs": {
