@@ -1,33 +1,31 @@
 version: 2
 updates:
-  # JS / TS packages — group minor & patch into single weekly PR
+  # JS / TS packages — monthly during early dev to keep noise down.
+  # Switch to weekly post Phase 1.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
     open-pull-requests-limit: 5
     groups:
       minor-and-patch:
-        update-types:
-          - "minor"
-          - "patch"
+        update-types: ["minor", "patch"]
+      major-deferred:
+        update-types: ["major"]
+        applies-to: version-updates
+    ignore:
+      # Major NestJS upgrade is a deliberate task, not a same-day accept
+      - dependency-name: "@nestjs/*"
+        update-types: ["version-update:semver-major"]
 
-  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
 
-  # Tauri / Rust side of the launcher
   - package-ecosystem: "cargo"
     directory: "/launcher/src-tauri"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 3
-
-  # Docker images
-  - package-ecosystem: "docker"
-    directory: "/infra"
-    schedule:
-      interval: "weekly"
