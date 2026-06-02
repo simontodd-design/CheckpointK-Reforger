@@ -1,17 +1,35 @@
 <script lang="ts">
   import { getVersion } from '@tauri-apps/api/app';
   import { openUrl } from '@tauri-apps/plugin-opener';
-  import { getHealth, coreUrl, type HealthResponse } from '$lib/api';
+  import {
+    getHealth,
+    initiateSteamAuth,
+    pollAuthStatus,
+    loadSession,
+    saveSession,
+    clearSession,
+    type HealthResponse,
+    type CkSession,
+  } from '$lib/api';
 
   let launcherVersion = $state('0.0.1');
   let coreState = $state<'connecting' | 'ok' | 'down'>('connecting');
   let coreInfo = $state<HealthResponse | null>(null);
   let coreError = $state<string | null>(null);
 
+  let session = $state<CkSession | null>(null);
+  let authState = $state<'idle' | 'waiting' | 'error'>('idle');
+  let authError = $state<string | null>(null);
+  let authPollTimer: ReturnType<typeof setInterval> | null = null;
+
   $effect(() => {
     void getVersion()
       .then((v) => (launcherVersion = v))
       .catch(() => {});
+  });
+
+  $effect(() => {
+    session = loadSession();
   });
 
   $effect(() => {
@@ -34,10 +52,73 @@
   }
 
   async function signInWithSteam() {
-    // Open Steam OAuth in the user's default browser via Tauri's opener.
-    // CK Core handles the redirect to Steam + the callback. Next bite
-    // wires a localhost listener here to capture the JWT back.
-    await openUrl(`${coreUrl}/auth/steam/start`);
+    if (authState === 'waiting') return;
+    authError = null;
+    authState = 'waiting';
+    try {
+      const { state, startUrl } = await initiateSteamAuth();
+      await openUrl(startUrl);
+      startPolling(state);
+    } catch (err) {
+      authError = err instanceof Error ? err.message : String(err);
+      authState = 'error';
+    }
+  }
+
+  function startPolling(state: string) {
+    stopPolling();
+    const start = Date.now();
+    const TIMEOUT_MS = 5 * 60 * 1000;
+    authPollTimer = setInterval(async () => {
+      if (Date.now() - start > TIMEOUT_MS) {
+        stopPolling();
+        authError = 'sign-in timed out — please try again';
+        authState = 'error';
+        return;
+      }
+      const result = await pollAuthStatus(state);
+      if (result.status === 'ok') {
+        stopPolling();
+        const next: CkSession = {
+          token: result.token,
+          profile: result.profile,
+          signedInAt: Date.now(),
+        };
+        saveSession(next);
+        session = next;
+        authState = 'idle';
+      } else if (result.status === 'error') {
+        stopPolling();
+        authError = result.error;
+        authState = 'error';
+      } else if (result.status === 'unknown') {
+        // session expired or never existed — bail
+        stopPolling();
+        authError = 'sign-in session expired';
+        authState = 'error';
+      }
+      // 'pending' → keep polling
+    }, 1500);
+  }
+
+  function stopPolling() {
+    if (authPollTimer) {
+      clearInterval(authPollTimer);
+      authPollTimer = null;
+    }
+  }
+
+  function signOut() {
+    clearSession();
+    session = null;
+    authState = 'idle';
+    authError = null;
+  }
+
+  function cancelSignIn() {
+    stopPolling();
+    authState = 'idle';
+    authError = null;
   }
 </script>
 
@@ -48,17 +129,41 @@
     <h1 class="display">Checkpoint K</h1>
     <p class="tagline">The cold is the easy part.</p>
 
-    <div class="actions">
-      <button
-        class="cta"
-        type="button"
-        disabled={coreState !== 'ok'}
-        onclick={signInWithSteam}
-      >
-        Sign in with Steam
-      </button>
-      <button class="ghost" type="button">Continue without account</button>
-    </div>
+    {#if session}
+      <div class="signed-in">
+        <img src={session.profile.avatarUrl} alt="" class="avatar" />
+        <div class="who-name">
+          Signed in as <strong>{session.profile.personaName}</strong>
+          <span class="who-id">{session.profile.steamId}</span>
+        </div>
+        <div class="actions">
+          <button class="cta" type="button" disabled>Choose character</button>
+          <button class="ghost" type="button" onclick={signOut}>Sign out</button>
+        </div>
+      </div>
+    {:else if authState === 'waiting'}
+      <div class="waiting">
+        <div class="spinner" aria-hidden="true"></div>
+        <p class="waiting-text">Waiting for Steam&hellip;</p>
+        <p class="waiting-sub">Complete the sign-in in your browser.</p>
+        <button class="ghost" type="button" onclick={cancelSignIn}>Cancel</button>
+      </div>
+    {:else}
+      <div class="actions">
+        <button
+          class="cta"
+          type="button"
+          disabled={coreState !== 'ok'}
+          onclick={signInWithSteam}
+        >
+          Sign in with Steam
+        </button>
+        <button class="ghost" type="button">Continue without account</button>
+      </div>
+      {#if authError}
+        <p class="error">{authError}</p>
+      {/if}
+    {/if}
 
     <div class="footer">
       <span class="version">Launcher v{launcherVersion}</span>
@@ -178,6 +283,77 @@
   .ghost:hover {
     border-color: #5fa0bc;
     color: #f4fafc;
+  }
+
+  /* signed-in */
+  .signed-in {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 56px;
+  }
+  .avatar {
+    width: 72px;
+    height: 72px;
+    border: 1px solid #2e5b72;
+    margin-bottom: 14px;
+  }
+  .who-name {
+    font-size: 13px;
+    color: #b9deeb;
+    margin-bottom: 24px;
+  }
+  .who-name strong {
+    color: #f4fafc;
+    font-weight: 600;
+  }
+  .who-id {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #5fa0bc;
+    margin-top: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  /* waiting */
+  .waiting {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 56px;
+  }
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 2px solid #1e3d4f;
+    border-top-color: #4fcfdf;
+    border-radius: 0;
+    animation: spin 1s linear infinite;
+    margin-bottom: 18px;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .waiting-text {
+    font-size: 13px;
+    color: #f4fafc;
+    margin: 0 0 4px;
+    letter-spacing: 0.04em;
+  }
+  .waiting-sub {
+    font-size: 11px;
+    color: #5fa0bc;
+    font-style: italic;
+    margin: 0 0 24px;
+  }
+
+  .error {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #c97b70;
+    margin: 16px 0 0;
+    letter-spacing: 0.04em;
   }
 
   .footer {

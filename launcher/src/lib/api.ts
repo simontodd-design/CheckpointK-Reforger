@@ -1,7 +1,8 @@
 /**
  * Thin client for CK Core.
  *
- * Phase 1 scope: just /health. Auth, characters, transfers come next.
+ * Phase 1 scope: /health + Steam auth flow (device-flow style polling).
+ * Characters, transfers, store come in later bites.
  *
  * In dev, CK Core is at localhost:3001. In prod the launcher reads
  * the value from a build-time env or a settings file. For now we
@@ -41,4 +42,74 @@ export async function getHealth(): Promise<HealthResult> {
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
+}
+
+// ── Steam auth ─────────────────────────────────────────────────────────
+
+export interface SteamProfile {
+  steamId: string;
+  personaName: string;
+  avatarUrl: string;
+  profileUrl: string;
+}
+
+export type AuthStatusResponse =
+  | { status: 'unknown' }
+  | { status: 'pending' }
+  | { status: 'ok'; token: string; profile: SteamProfile }
+  | { status: 'error'; error: string };
+
+export async function initiateSteamAuth(): Promise<{ state: string; startUrl: string }> {
+  const res = await fetch(`${coreUrl}/auth/steam/initiate`, {
+    method: 'POST',
+    headers: { Accept: 'application/json' },
+  });
+  if (!res.ok) {
+    throw new Error(`initiate HTTP ${res.status}`);
+  }
+  const data = (await res.json()) as { state: string };
+  return {
+    state: data.state,
+    startUrl: `${coreUrl}/auth/steam/start?state=${encodeURIComponent(data.state)}`,
+  };
+}
+
+export async function pollAuthStatus(state: string): Promise<AuthStatusResponse> {
+  const res = await fetch(
+    `${coreUrl}/auth/steam/status?state=${encodeURIComponent(state)}`,
+    { headers: { Accept: 'application/json' } },
+  );
+  if (!res.ok) {
+    return { status: 'error', error: `status HTTP ${res.status}` };
+  }
+  return (await res.json()) as AuthStatusResponse;
+}
+
+// ── Session store ────────────────────────────────────────────────────
+
+const SESSION_KEY = 'ck.session.v1';
+
+export interface CkSession {
+  token: string;
+  profile: SteamProfile;
+  signedInAt: number;
+}
+
+export function loadSession(): CkSession | null {
+  if (typeof localStorage === 'undefined') return null;
+  const raw = localStorage.getItem(SESSION_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as CkSession;
+  } catch {
+    return null;
+  }
+}
+
+export function saveSession(session: CkSession): void {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+export function clearSession(): void {
+  localStorage.removeItem(SESSION_KEY);
 }
