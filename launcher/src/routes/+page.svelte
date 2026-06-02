@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getVersion } from '@tauri-apps/api/app';
-  import { getHealth, type HealthResponse } from '$lib/api';
+  import { openUrl } from '@tauri-apps/plugin-opener';
+  import { getHealth, coreUrl, type HealthResponse } from '$lib/api';
 
   let launcherVersion = $state('0.0.1');
   let coreState = $state<'connecting' | 'ok' | 'down'>('connecting');
@@ -31,6 +32,13 @@
       coreError = result.error ?? 'unknown error';
     }
   }
+
+  async function signInWithSteam() {
+    // Open Steam OAuth in the user's default browser via Tauri's opener.
+    // CK Core handles the redirect to Steam + the callback. Next bite
+    // wires a localhost listener here to capture the JWT back.
+    await openUrl(`${coreUrl}/auth/steam/start`);
+  }
 </script>
 
 <main>
@@ -41,7 +49,12 @@
     <p class="tagline">The cold is the easy part.</p>
 
     <div class="actions">
-      <button class="cta" type="button" disabled={coreState !== 'ok'}>
+      <button
+        class="cta"
+        type="button"
+        disabled={coreState !== 'ok'}
+        onclick={signInWithSteam}
+      >
         Sign in with Steam
       </button>
       <button class="ghost" type="button">Continue without account</button>
