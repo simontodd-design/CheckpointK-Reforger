@@ -6,6 +6,7 @@
     type MapInfo,
   } from '$lib/api';
   import { session } from '$lib/session.svelte';
+  import { armaStore } from '$lib/arma.svelte';
 
   let characters = $state<Character[]>([]);
   let maps = $state<MapInfo[]>([]);
@@ -26,7 +27,8 @@
     selectedCharacter !== null &&
       selectedMap !== null &&
       selectedMap.status === 'online' &&
-      selectedMap.unlocked,
+      selectedMap.unlocked &&
+      armaStore.isReady,
   );
 
   $effect(() => {
@@ -166,7 +168,13 @@
 
     <footer class="enter-bar">
       <div class="enter-info">
-        {#if selectedCharacter && selectedMap}
+        {#if !armaStore.isReady}
+          <span class="info-label warn">Reforger</span>
+          <span class="info-hint">
+            Arma Reforger isn't detected. Set the install path in
+            <a href="/settings" class="inline-link">Settings</a>.
+          </span>
+        {:else if selectedCharacter && selectedMap}
           <span class="info-label">Loadout</span>
           <span class="info-value">
             <strong>{selectedCharacter.name}</strong>
@@ -403,6 +411,13 @@
   .info-value { font-size: 13px; color: #b9deeb; }
   .info-value strong { color: #f4fafc; font-weight: 600; }
   .info-hint { font-size: 12px; color: #5fa0bc; font-style: italic; }
+  .info-label.warn { color: #c97b70; }
+  .inline-link {
+    color: #4fcfdf;
+    text-decoration: none;
+    border-bottom: 1px solid #2e5b72;
+  }
+  .inline-link:hover { border-color: #4fcfdf; }
 
   .enter-btn {
     padding: 14px 32px;

@@ -1,5 +1,7 @@
 <script lang="ts">
   import { session } from '$lib/session.svelte';
+  import { armaStore } from '$lib/arma.svelte';
+  import { pickArmaDirectory } from '$lib/arma';
 
   // Settings are stored in localStorage for v1. Server-side prefs (cross-device
   // sync) lands when the users table goes in.
@@ -46,6 +48,26 @@
     s = { ...defaults };
     localStorage.removeItem(SETTINGS_KEY);
   }
+
+  // ── Arma install management ───────────────────────────────────────
+  let browseError = $state<string | null>(null);
+
+  async function detectAgain() {
+    browseError = null;
+    await armaStore.detectAuto();
+  }
+
+  async function browseManual() {
+    browseError = null;
+    try {
+      const dir = await pickArmaDirectory();
+      if (!dir) return;
+      const r = await armaStore.setManual(dir);
+      if (!r.ok) browseError = r.error ?? 'invalid folder';
+    } catch (err) {
+      browseError = err instanceof Error ? err.message : String(err);
+    }
+  }
 </script>
 
 <div class="page">
@@ -54,6 +76,83 @@
     <h1 class="display">Settings.</h1>
     <p class="sub">Audio, behaviour, region. Game-side settings live in Reforger.</p>
   </header>
+
+  <section class="section">
+    <h2 class="section-title">Game install</h2>
+    <div class="settings-block arma-block">
+      <div class="arma-status">
+        <span class="arma-label">Arma Reforger</span>
+        {#if armaStore.status === 'ready'}
+          <span class="arma-badge ok">
+            <span class="arma-dot" aria-hidden="true"></span>
+            Detected {armaStore.source === 'manual' ? '(manual)' : '(auto)'}
+          </span>
+        {:else if armaStore.status === 'detecting'}
+          <span class="arma-badge pending">
+            <span class="arma-dot pulse" aria-hidden="true"></span>
+            Scanning&hellip;
+          </span>
+        {:else if armaStore.status === 'not_found'}
+          <span class="arma-badge warn">
+            <span class="arma-dot" aria-hidden="true"></span>
+            Not found
+          </span>
+        {:else}
+          <span class="arma-badge warn">
+            <span class="arma-dot" aria-hidden="true"></span>
+            Not configured
+          </span>
+        {/if}
+      </div>
+
+      {#if armaStore.install}
+        <div class="arma-paths">
+          <div class="arma-path-row">
+            <span class="arma-path-label">Install</span>
+            <code class="arma-path">{armaStore.install.install_dir}</code>
+          </div>
+          <div class="arma-path-row">
+            <span class="arma-path-label">Executable</span>
+            <code class="arma-path">{armaStore.install.exe_path}</code>
+          </div>
+          {#if armaStore.install.steam_path}
+            <div class="arma-path-row">
+              <span class="arma-path-label">Steam</span>
+              <code class="arma-path">{armaStore.install.steam_path}</code>
+            </div>
+          {/if}
+        </div>
+      {:else if armaStore.lastError}
+        <p class="arma-error">{armaStore.lastError}</p>
+      {:else}
+        <p class="arma-hint">
+          We couldn't find Arma Reforger automatically. Use Browse to point at
+          your install folder.
+        </p>
+      {/if}
+
+      {#if browseError}
+        <p class="arma-error">{browseError}</p>
+      {/if}
+
+      <div class="arma-actions">
+        <button class="ghost" type="button" onclick={detectAgain}>
+          {armaStore.install ? 'Detect again' : 'Auto-detect'}
+        </button>
+        <button class="ghost" type="button" onclick={browseManual}>Browse&hellip;</button>
+        {#if armaStore.install}
+          <button class="ghost danger" type="button" onclick={() => armaStore.clear()}>
+            Forget
+          </button>
+        {/if}
+      </div>
+      <p class="arma-footnote">
+        We look up Steam's install via the registry, walk every library folder,
+        and check for <code>ArmaReforgerSteam.exe</code>. If Reforger is somewhere
+        unusual, point at it manually.
+      </p>
+    </div>
+  </section>
 
   <section class="section">
     <h2 class="section-title">Audio</h2>
@@ -258,6 +357,114 @@
     font-size: 11px;
     color: #4fcfdf;
     letter-spacing: 0.08em;
+  }
+
+  /* Arma install */
+  .arma-block { display: flex; flex-direction: column; gap: 16px; }
+  .arma-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .arma-label {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    color: #f4fafc;
+  }
+  .arma-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 11px;
+    border: 1px solid;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .arma-badge.ok    { border-color: #4fcfdf; color: #4fcfdf; }
+  .arma-badge.pending { border-color: #5fa0bc; color: #5fa0bc; }
+  .arma-badge.warn  { border-color: #c97b70; color: #c97b70; }
+  .arma-dot {
+    width: 6px;
+    height: 6px;
+    background: currentColor;
+    display: inline-block;
+  }
+  .arma-dot.pulse { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.3; }
+  }
+
+  .arma-paths {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid #1e3d4f;
+  }
+  .arma-path-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .arma-path-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #5fa0bc;
+  }
+  .arma-path {
+    font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+    font-size: 11px;
+    color: #b9deeb;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+  }
+
+  .arma-hint,
+  .arma-error {
+    font-size: 12px;
+    color: #5fa0bc;
+    font-style: italic;
+    margin: 0;
+    line-height: 1.5;
+  }
+  .arma-error { color: #c97b70; font-family: 'JetBrains Mono', monospace; font-style: normal; font-size: 11px; }
+
+  .arma-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .arma-actions .ghost { padding: 9px 16px; font-size: 10px; }
+  .arma-actions .ghost.danger {
+    border-color: #5a2823;
+    color: #c97b70;
+  }
+  .arma-actions .ghost.danger:hover {
+    border-color: #8e382c;
+    color: #f4fafc;
+  }
+
+  .arma-footnote {
+    font-size: 10px;
+    color: #2e5b72;
+    margin: 0;
+    line-height: 1.5;
+  }
+  .arma-footnote code {
+    font-family: 'JetBrains Mono', monospace;
+    color: #5fa0bc;
+    background: rgba(79, 207, 223, 0.05);
+    padding: 1px 4px;
   }
 
   .cta, .ghost {

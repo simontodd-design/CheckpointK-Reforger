@@ -4,6 +4,7 @@
   import { getVersion } from '@tauri-apps/api/app';
   import { getHealth, type HealthResponse } from '$lib/api';
   import { session } from '$lib/session.svelte';
+  import { armaStore } from '$lib/arma.svelte';
 
   let { children } = $props();
 
@@ -14,6 +15,17 @@
   // Load session from localStorage on mount.
   $effect(() => {
     session.load();
+  });
+
+  // Boot-time Arma detection: try the stored path first (re-validates),
+  // and if nothing is stored, kick off an auto-detect scan once.
+  $effect(() => {
+    void (async () => {
+      await armaStore.load();
+      if (armaStore.status === 'unknown') {
+        await armaStore.detectAuto();
+      }
+    })();
   });
 
   // Read Tauri version.
@@ -103,7 +115,19 @@
 <div class="statusbar">
   <span class="status-item">Launcher v{launcherVersion}</span>
   <span class="dot">·</span>
-  <span class="status-item">Mod &mdash;</span>
+  {#if armaStore.status === 'ready'}
+    <span class="status-item ok" title={armaStore.install?.install_dir ?? ''}>
+      <span class="indicator" aria-hidden="true"></span>
+      Reforger detected
+    </span>
+  {:else if armaStore.status === 'detecting'}
+    <span class="status-item connecting">Reforger&hellip;</span>
+  {:else}
+    <span class="status-item down" title={armaStore.lastError ?? 'Reforger install not found'}>
+      <span class="indicator" aria-hidden="true"></span>
+      Reforger missing
+    </span>
+  {/if}
   <span class="dot">·</span>
   {#if coreState === 'connecting'}
     <span class="status-item connecting">Core connecting&hellip;</span>
