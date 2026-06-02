@@ -59,12 +59,16 @@ interface ConnectedAgent {
 /** Callback registered by ServersService to receive inbound state events. */
 export type ServerStateHandler = (payload: ServerStatePayload) => void;
 
+/** Callback registered by LogsService to receive inbound log lines. */
+export type ServerLogHandler = (payload: { serverId: string; line: string; ts?: number }) => void;
+
 @Injectable()
 export class AgentsServer implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AgentsServer.name);
   private readonly agents = new Map<WebSocket, ConnectedAgent>();
   private wss?: WebSocketServer;
   private stateHandler: ServerStateHandler | null = null;
+  private logHandler: ServerLogHandler | null = null;
 
   /**
    * Register a callback to receive `server:state` events from agents.
@@ -73,6 +77,14 @@ export class AgentsServer implements OnModuleInit, OnModuleDestroy {
    */
   setStateHandler(handler: ServerStateHandler): void {
     this.stateHandler = handler;
+  }
+
+  /**
+   * Register a callback to receive `log:line` events from agents.
+   * LogsService calls this in its onModuleInit.
+   */
+  setLogHandler(handler: ServerLogHandler): void {
+    this.logHandler = handler;
   }
 
   onModuleInit() {
@@ -143,9 +155,24 @@ export class AgentsServer implements OnModuleInit, OnModuleDestroy {
       case 'server:state':
         this.onServerState(agent, msg.data as ServerStatePayload);
         break;
+      case 'log:line':
+        this.onLogLine(agent, msg.data as { serverId: string; line: string; ts?: number });
+        break;
       default:
         this.logger.warn({ event: msg.event, hostId: agent.hostId }, 'unhandled event');
     }
+  }
+
+  private onLogLine(
+    agent: ConnectedAgent,
+    payload: { serverId: string; line: string; ts?: number },
+  ) {
+    if (!payload?.serverId || typeof payload.line !== 'string') {
+      this.logger.warn({ payload, hostId: agent.hostId }, 'malformed log:line');
+      return;
+    }
+    if (!this.logHandler) return; // no subscriber registered, silently drop
+    this.logHandler(payload);
   }
 
   private onServerState(agent: ConnectedAgent, payload: ServerStatePayload) {

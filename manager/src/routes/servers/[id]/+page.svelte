@@ -9,6 +9,7 @@
     type CkServer,
   } from '$lib/api';
   import { session } from '$lib/session.svelte';
+  import { logStream, type LogLine } from '$lib/logs.svelte';
 
   let server = $state<CkServer | null>(null);
   let loading = $state(true);
@@ -24,6 +25,51 @@
     const t = setInterval(() => void load(false), 5_000);
     return () => clearInterval(t);
   });
+
+  // Live log subscription. Re-subscribes if the page navigates between
+  // server detail pages without unmounting (Svelte preserves the component).
+  $effect(() => {
+    if (!session.isSignedIn) return;
+    const sid = id;
+    logStream.subscribe(sid);
+    return () => logStream.unsubscribe(sid);
+  });
+
+  // Auto-scroll the console to the bottom when new lines arrive, unless
+  // the operator has scrolled up to read history.
+  let consoleEl: HTMLDivElement | null = $state(null);
+  let autoScroll = $state(true);
+  const lines = $derived(logStream.linesFor(id));
+
+  $effect(() => {
+    // Tracking the array length is enough to fire on new lines.
+    void lines.length;
+    if (autoScroll && consoleEl) {
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+  });
+
+  function onConsoleScroll() {
+    if (!consoleEl) return;
+    const atBottom =
+      consoleEl.scrollTop + consoleEl.clientHeight >= consoleEl.scrollHeight - 8;
+    autoScroll = atBottom;
+  }
+
+  function fmtTs(ms: number): string {
+    const d = new Date(ms);
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    const s = String(d.getSeconds()).padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  }
+
+  function classifyLine(line: string): string {
+    if (line.includes('(E)') || /error|failed|exception/i.test(line)) return 'err';
+    if (line.includes('(W)') || /warn/i.test(line)) return 'warn';
+    if (/ENGINE|RESOURCES|PHYSICS|NETWORK|GAMECODE|AUDIO|AI|SAVE|STREAM/.test(line)) return 'sys';
+    return '';
+  }
 
   async function load(showSpinner = true) {
     if (!session.token) return;
@@ -114,9 +160,35 @@
     </section>
 
     <section class="block">
-      <h2 class="block-title">Live log</h2>
-      <div class="log-placeholder">
-        <p>Live log streaming lands next bite — Manager → CK Core → Agent → Reforger console tail.</p>
+      <header class="log-head">
+        <h2 class="block-title">Live console</h2>
+        <div class="log-status">
+          <span class="ws ws-{logStream.status}">
+            <span class="ws-dot" aria-hidden="true"></span>
+            {logStream.status}
+          </span>
+          {#if logStream.lastError}<span class="ws-err">{logStream.lastError}</span>{/if}
+          <span class="autoscroll" class:on={autoScroll}>
+            {autoScroll ? 'auto-scroll on' : 'paused — scroll to bottom to resume'}
+          </span>
+        </div>
+      </header>
+      <div
+        class="console"
+        bind:this={consoleEl}
+        onscroll={onConsoleScroll}
+        tabindex="0"
+      >
+        {#if lines.length === 0}
+          <p class="empty">No log lines yet. Start the server to see output.</p>
+        {:else}
+          {#each lines as ln (ln.ts + '|' + ln.line)}
+            <div class="line {classifyLine(ln.line)}">
+              <span class="line-ts">{fmtTs(ln.ts)}</span>
+              <span class="line-body">{ln.line}</span>
+            </div>
+          {/each}
+        {/if}
       </div>
     </section>
   {/if}
@@ -305,16 +377,77 @@
     margin: 0 0 14px;
     font-weight: 500;
   }
-  .log-placeholder {
-    padding: 40px 24px;
-    background: rgba(0,0,0,0.4);
-    border: 1px dashed #2e5b72;
-    text-align: center;
-    color: #5fa0bc;
-    font-size: 12px;
-    font-style: italic;
+  .log-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
   }
-  .log-placeholder p { margin: 0; }
+  .log-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: #5fa0bc;
+  }
+  .ws {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+  .ws-dot {
+    width: 6px;
+    height: 6px;
+    display: inline-block;
+    background: currentColor;
+  }
+  .ws-open { color: #4fcfdf; }
+  .ws-connecting { color: #c9a570; }
+  .ws-closed, .ws-error, .ws-idle { color: #c97b70; }
+  .ws-err { color: #c97b70; }
+  .autoscroll {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .autoscroll.on { color: #4fcfdf; }
+
+  .console {
+    height: 420px;
+    overflow-y: auto;
+    background: #02060a;
+    border: 1px solid #1e3d4f;
+    padding: 12px 14px;
+    font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: #b9deeb;
+    outline: none;
+  }
+  .console:focus { border-color: #4fcfdf; }
+  .empty {
+    color: #2e5b72;
+    font-style: italic;
+    margin: 0;
+    padding: 24px 0;
+    text-align: center;
+  }
+  .line {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    gap: 12px;
+    padding: 0;
+    word-break: break-all;
+  }
+  .line-ts { color: #2e5b72; }
+  .line-body { color: #b9deeb; }
+  .line.sys .line-body { color: #d3e9f0; }
+  .line.warn .line-body { color: #c9a570; }
+  .line.err .line-body { color: #c97b70; }
 
   .state {
     display: flex;

@@ -48,8 +48,66 @@ interface KillPayload {
 
 type ServerState = 'starting' | 'running' | 'stopping' | 'stopped' | 'crashed';
 
-/** Map of serverId → fake PID so we can simulate process lifecycle. */
-const runningServers = new Map<string, number>();
+interface RunningStub {
+  pid: number;
+  logTimer: ReturnType<typeof setInterval>;
+  mapId: string;
+}
+
+/** Map of serverId → fake process so we can simulate lifecycle + logs. */
+const runningServers = new Map<string, RunningStub>();
+
+// Sample log lines that vaguely look like Reforger output. Cycled at
+// random intervals to make the Manager log viewer look alive.
+const SAMPLE_LINES: ((mapId: string) => string)[] = [
+  () => 'ENGINE       : Tick took 14.2ms',
+  () => 'GAMECODE     : SCR_PlayerController spawned for player 76561198768135680',
+  () => 'NETWORK      : Replicated 213 entities to 38 clients',
+  () => 'GAMECODE  (W): AI: pathfind retry on node 0x4a1f',
+  (m) => `RESOURCES    : Loaded prefab "${m}/buildings/checkpoint_alpha.et" (cached)`,
+  () => 'AUDIO        : Mix bus VoiceChat: 12 active streams',
+  () => 'PHYSICS      : Resolved 1843 contact pairs in 0.8ms',
+  () => 'GAMECODE     : Player connected: 76561198768135680 (FreddyGotFingered)',
+  (m) => `SAVE         : Persisted ${m} world state to /profile/saves`,
+  () => 'NETWORK   (W): Client 12 RTT 187ms exceeds threshold',
+  () => 'AI           : Spawned infected wave (n=14) at grid 042-129',
+  () => 'STREAM       : Streamed 28 MB of voxel terrain to 4 clients',
+];
+
+function randomLogLine(mapId: string): string {
+  const tpl = SAMPLE_LINES[Math.floor(Math.random() * SAMPLE_LINES.length)];
+  const t = new Date();
+  const hh = String(t.getHours()).padStart(2, '0');
+  const mm = String(t.getMinutes()).padStart(2, '0');
+  const ss = String(t.getSeconds()).padStart(2, '0');
+  const ms = String(t.getMilliseconds()).padStart(3, '0');
+  return `${hh}:${mm}:${ss}.${ms} ${tpl(mapId)}`;
+}
+
+function startFakeLogs(serverId: string, mapId: string): ReturnType<typeof setInterval> {
+  // 2-5 seconds between lines, so the viewer feels live but not noisy.
+  let timer: ReturnType<typeof setInterval>;
+  const tick = () => {
+    send('log:line', {
+      serverId,
+      line: randomLogLine(mapId),
+      ts: Date.now(),
+    });
+  };
+  const schedule = () => {
+    timer = setTimeout(() => {
+      tick();
+      schedule();
+    }, 1500 + Math.random() * 2500);
+  };
+  schedule();
+  return timer!;
+}
+
+function stopFakeLogs(serverId: string): void {
+  const stub = runningServers.get(serverId);
+  if (stub) clearInterval(stub.logTimer);
+}
 
 let currentWs: WebSocket | null = null;
 
@@ -83,12 +141,28 @@ async function handleSpawn(payload: SpawnPayload): Promise<void> {
     '[stub] would spawn ArmaReforgerServer.exe — steamcmd integration pending',
   );
 
-  // Pretend startup takes ~1s, then report running with a fake PID.
   reportState(payload.serverId, 'starting');
+  send('log:line', {
+    serverId: payload.serverId,
+    line: `${nowStr()} ENGINE       : Engine boot — version 190084`,
+    ts: Date.now(),
+  });
+  send('log:line', {
+    serverId: payload.serverId,
+    line: `${nowStr()} ENGINE       : Loading world "${payload.mapId}"`,
+    ts: Date.now(),
+  });
+
   const fakePid = 30000 + Math.floor(Math.random() * 10000);
   setTimeout(() => {
-    runningServers.set(payload.serverId, fakePid);
+    const logTimer = startFakeLogs(payload.serverId, payload.mapId);
+    runningServers.set(payload.serverId, { pid: fakePid, logTimer, mapId: payload.mapId });
     reportState(payload.serverId, 'running', { pid: fakePid, players: 0 });
+    send('log:line', {
+      serverId: payload.serverId,
+      line: `${nowStr()} GAMECODE     : World ready — listening on UDP/${payload.port}`,
+      ts: Date.now(),
+    });
     log.info(
       { serverId: payload.serverId, pid: fakePid },
       '[stub] server transitioned to running',
@@ -99,9 +173,20 @@ async function handleSpawn(payload: SpawnPayload): Promise<void> {
 async function handleKill(payload: KillPayload): Promise<void> {
   log.info({ serverId: payload.serverId, pid: payload.pid }, '[stub] would kill process');
   reportState(payload.serverId, 'stopping');
+  send('log:line', {
+    serverId: payload.serverId,
+    line: `${nowStr()} ENGINE       : Received SIGTERM — initiating shutdown`,
+    ts: Date.now(),
+  });
   setTimeout(() => {
+    stopFakeLogs(payload.serverId);
     runningServers.delete(payload.serverId);
     reportState(payload.serverId, 'stopped', { pid: null, players: 0 });
+    send('log:line', {
+      serverId: payload.serverId,
+      line: `${nowStr()} ENGINE       : Process exited cleanly`,
+      ts: Date.now(),
+    });
     log.info({ serverId: payload.serverId }, '[stub] server transitioned to stopped');
   }, 1000);
 }
@@ -110,9 +195,19 @@ async function handleRestart(payload: SpawnPayload): Promise<void> {
   log.info({ serverId: payload.serverId }, '[stub] restart — kill then spawn');
   reportState(payload.serverId, 'stopping');
   setTimeout(() => {
+    stopFakeLogs(payload.serverId);
     runningServers.delete(payload.serverId);
     void handleSpawn(payload);
   }, 800);
+}
+
+function nowStr(): string {
+  const t = new Date();
+  const hh = String(t.getHours()).padStart(2, '0');
+  const mm = String(t.getMinutes()).padStart(2, '0');
+  const ss = String(t.getSeconds()).padStart(2, '0');
+  const ms = String(t.getMilliseconds()).padStart(3, '0');
+  return `${hh}:${mm}:${ss}.${ms}`;
 }
 
 function connect(): void {
