@@ -16,9 +16,9 @@
  *   - Push commands (spawn / kill / restart Reforger, steamcmd, mod sync)
  *   - Stream Reforger logs back to CK Manager UI
  */
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { WebSocketServer, WebSocket } from 'ws';
 import type { IncomingMessage } from 'node:http';
+import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
+import { WebSocket, WebSocketServer } from 'ws';
 
 interface HelloPayload {
   hostId: string;
@@ -57,7 +57,7 @@ export class AgentsServer implements OnModuleInit, OnModuleDestroy {
     for (const agent of this.agents.values()) {
       try { agent.socket.close(1001, 'server shutting down'); } catch {}
     }
-    await new Promise<void>((resolve) => this.wss!.close(() => resolve()));
+    await new Promise<void>((resolve) => this.wss?.close(() => resolve()));
   }
 
   private handleConnection(socket: WebSocket, req: IncomingMessage) {

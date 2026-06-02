@@ -9,15 +9,12 @@
       ".svelte-kit",
       "**/*.gen.ts",
       "**/*.svelte",
-      "launcher/src-tauri/target",
-      "launcher/.svelte-kit",
-      "launcher/build",
-      "launcher/src/**",
-      "manager/.svelte-kit",
-      "manager/build",
-      "manager/src/**",
+      "launcher/**",
+      "manager/**",
       "mod/**",
-      "design/**"
+      "design/**",
+      "**/drizzle/**",
+      "**/*.lock"
     ]
   },
   "vcs": {
