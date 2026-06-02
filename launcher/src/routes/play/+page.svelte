@@ -67,11 +67,7 @@
     launching = true;
     launchError = null;
     try {
-      const r = await launchReforger(
-        armaStore.install.exe_path,
-        selectedMap.server,
-        null,
-      );
+      const r = await launchReforger(selectedMap.server, null);
       if (!r.ok) {
         launchError = r.error ?? 'launch failed';
       }

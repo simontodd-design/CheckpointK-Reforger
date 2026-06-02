@@ -111,7 +111,7 @@ fn try_detect_arma() -> Result<Option<ArmaInstall>, String> {
 }
 
 #[cfg(windows)]
-fn find_steam_path() -> Option<PathBuf> {
+pub fn find_steam_path() -> Option<PathBuf> {
     use winreg::enums::HKEY_CURRENT_USER;
     use winreg::RegKey;
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
@@ -121,7 +121,7 @@ fn find_steam_path() -> Option<PathBuf> {
 }
 
 #[cfg(not(windows))]
-fn find_steam_path() -> Option<PathBuf> {
+pub fn find_steam_path() -> Option<PathBuf> {
     // Non-Windows fallback — try the standard Linux/macOS Steam dirs.
     use std::env;
     let home = env::var("HOME").ok()?;

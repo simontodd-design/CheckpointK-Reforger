@@ -31,15 +31,19 @@ export interface LaunchResult {
   ok: boolean;
   pid: number | null;
   error: string | null;
+  cmdline: string | null;
 }
 
+/**
+ * Launch Reforger via Steam — the launcher does NOT spawn the exe directly
+ * (Steamworks init fails when not parented by Steam). Steam.exe is found
+ * server-side via the registry.
+ */
 export async function launchReforger(
-  exePath: string,
   server: string | null,
   password: string | null = null,
 ): Promise<LaunchResult> {
   return invoke<LaunchResult>('launch_reforger', {
-    exePath,
     server,
     password,
   });
