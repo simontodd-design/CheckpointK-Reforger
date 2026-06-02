@@ -55,7 +55,9 @@ export class AgentsServer implements OnModuleInit, OnModuleDestroy {
     if (!this.wss) return;
     this.logger.log('closing agents WebSocket server');
     for (const agent of this.agents.values()) {
-      try { agent.socket.close(1001, 'server shutting down'); } catch {}
+      try {
+        agent.socket.close(1001, 'server shutting down');
+      } catch {}
     }
     await new Promise<void>((resolve) => this.wss?.close(() => resolve()));
   }

@@ -49,6 +49,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Install Playwright Chromium (for manager browser tests)
+        run: cd manager && bunx playwright install --with-deps chromium
+
       - name: Generate Drizzle migrations (idempotent — produces no diff if up to date)
         env:
           DATABASE_URL: postgres://ck:ck@localhost:5432/ck_test

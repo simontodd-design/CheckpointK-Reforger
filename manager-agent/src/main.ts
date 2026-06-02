@@ -1,3 +1,4 @@
+import pino from 'pino';
 /**
  * ck-manager-agent — per-host supervisor.
  *
@@ -10,7 +11,6 @@
  * Protocol: JSON messages of the form { event: 'name', data: {...} }
  */
 import WebSocket from 'ws';
-import pino from 'pino';
 
 const log = pino({
   level: process.env.LOG_LEVEL ?? 'info',
@@ -27,7 +27,9 @@ const VERSION = '0.0.1';
 const RECONNECT_DELAY_MS = 5000;
 
 if (!AGENT_TOKEN) {
-  log.warn('AGENT_TOKEN not set — CK Core will accept the connection if its own AGENT_TOKEN is also unset (dev only)');
+  log.warn(
+    'AGENT_TOKEN not set — CK Core will accept the connection if its own AGENT_TOKEN is also unset (dev only)',
+  );
 }
 
 function connect() {
@@ -42,10 +44,12 @@ function connect() {
 
   ws.on('open', () => {
     log.info('connected to CK Core');
-    ws.send(JSON.stringify({
-      event: 'hello',
-      data: { hostId: AGENT_HOST_ID, version: VERSION },
-    }));
+    ws.send(
+      JSON.stringify({
+        event: 'hello',
+        data: { hostId: AGENT_HOST_ID, version: VERSION },
+      }),
+    );
   });
 
   ws.on('message', (raw) => {
@@ -64,7 +68,10 @@ function connect() {
   });
 
   ws.on('close', (code, reason) => {
-    log.warn({ code, reason: reason.toString() }, `connection closed — reconnecting in ${RECONNECT_DELAY_MS / 1000}s`);
+    log.warn(
+      { code, reason: reason.toString() },
+      `connection closed — reconnecting in ${RECONNECT_DELAY_MS / 1000}s`,
+    );
     setTimeout(connect, RECONNECT_DELAY_MS);
   });
 

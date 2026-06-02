@@ -10,12 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/simontodd-design/CheckpointK-Reforger.git"
   },
-  "workspaces": [
-    "core",
-    "manager",
-    "manager-agent",
-    "launcher"
-  ],
+  "workspaces": ["core", "manager", "manager-agent", "launcher"],
   "scripts": {
     "dev": "bun run --filter '*' dev",
     "build": "bun run --filter '*' build",

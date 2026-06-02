@@ -9,8 +9,8 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 
-import { HealthModule } from './modules/health/health.module';
 import { AgentsModule } from './modules/agents/agents.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
