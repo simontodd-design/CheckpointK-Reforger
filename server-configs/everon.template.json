@@ -1,0 +1,47 @@
+{
+  "bindAddress": "0.0.0.0",
+  "bindPort": __BIND_PORT__,
+  "publicAddress": "",
+  "publicPort": __BIND_PORT__,
+  "a2s": {
+    "address": "0.0.0.0",
+    "port": __A2S_PORT__
+  },
+  "rcon": {
+    "address": "127.0.0.1",
+    "port": __RCON_PORT__,
+    "password": "__ADMIN_PASSWORD__",
+    "permission": "monitor"
+  },
+  "game": {
+    "name": "__SERVER_NAME__",
+    "password": "",
+    "passwordAdmin": "__ADMIN_PASSWORD__",
+    "admins": [],
+    "scenarioId": "{ECC61978EDCC2B5A}Missions/__CK_EVERON__.conf",
+    "playerCountLimit": __CAPACITY__,
+    "autoJoinable": false,
+    "visible": true,
+    "supportedPlatforms": ["PLATFORM_PC"],
+    "gameProperties": {
+      "serverMaxViewDistance": 2500,
+      "serverMinGrassDistance": 50,
+      "networkViewDistance": 1500,
+      "disableThirdPerson": true,
+      "fastValidation": true,
+      "battlEye": true,
+      "VONDisableUI": false,
+      "VONDisableDirectSpeech": false,
+      "VONCanTransmitCrossFaction": false,
+      "missionHeader": {}
+    },
+    "mods": []
+  },
+  "operating": {
+    "lobbyPlayerSync": true,
+    "playerSaveTime": 120,
+    "aiLimit": -1,
+    "slotReservationTimeout": 60,
+    "disableNavmeshStreaming": []
+  }
+}
