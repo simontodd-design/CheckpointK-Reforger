@@ -1,24 +1,7 @@
-# CK Launcher
+# Tauri + SvelteKit + TypeScript
 
-Player-facing launcher. Tauri shell (Rust) + SvelteKit frontend.
+This template should help get you started developing with Tauri, SvelteKit and TypeScript in Vite.
 
-**Status:** scaffold only. Full implementation in **Phase 1** of the
-[build guide](../../DayZDev/CK_REFORGER_BUILD_GUIDE.md).
+## Recommended IDE Setup
 
-## Init (Phase 1)
-```bash
-cd launcher
-bunx create-tauri-app@latest . --template sveltekit-ts
-```
-
-## Capabilities (v1)
-- Steam + Discord OAuth
-- Character select
-- Server picker (CK cluster only)
-- Mod validation against CK Core manifest
-- Spawn Reforger via `-client <IP>` + `-addons <ids>`
-- Loading overlay during cross-server transitions (file-watcher pattern)
-- Anti-bypass session ticket
-- Discord Rich Presence
-- Friend join
-- Offline mode (cached data)
+[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).

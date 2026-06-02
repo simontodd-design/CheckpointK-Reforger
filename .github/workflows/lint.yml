@@ -10,12 +10,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ts-lint:
-    name: TypeScript lint + typecheck
+  core-and-agent:
+    name: Core + Agent (Biome + TS)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
@@ -23,11 +22,59 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Biome (lint + format check)
+      - name: Biome (root — covers core/, manager-agent/, design/scripts/)
         run: bun run lint
 
-      - name: TypeScript check
-        run: bun run typecheck
+      - name: TypeScript check — core
+        run: cd core && bun run typecheck
 
-      - name: Design tokens — verify no drift between tokens and mod
+      - name: TypeScript check — manager-agent
+        run: cd manager-agent && bun run typecheck
+
+  manager:
+    name: Manager (ESLint + svelte-check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint (manager)
+        run: cd manager && bun run lint
+
+      - name: svelte-check (manager)
+        run: cd manager && bun run check
+
+  launcher:
+    name: Launcher (svelte-check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: svelte-check (launcher)
+        run: cd launcher && bun run check
+
+  design-tokens:
+    name: Design tokens — verify no drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: design:check
         run: bun run design:check

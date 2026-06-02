@@ -29,7 +29,7 @@ out/
 *.tsbuildinfo
 
 # ──── Drizzle ──────────────────────────────────────────────────────────
-core/drizzle/
+# Migrations are SQL artifacts — commit them so CI can apply them.
 
 # ──── Tauri / launcher ─────────────────────────────────────────────────
 launcher/src-tauri/target/

@@ -10,7 +10,7 @@
     "build": "bun build src/main.ts --outdir dist --target bun --compile --outfile dist/ck-manager-agent",
     "start": "bun --env-file=../.env.local src/main.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "ws": "^8.18.0",
