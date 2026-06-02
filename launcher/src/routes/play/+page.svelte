@@ -60,23 +60,33 @@
   }
 
   let launchError = $state<string | null>(null);
+  let lastCmdline = $state<string | null>(null);
 
   async function enterWorld() {
-    if (!canEnter || launching) return;
-    if (!armaStore.install || !selectedMap) return;
+    if (launching) return;
+    if (!selectedMap) {
+      launchError = 'no map selected';
+      return;
+    }
     launching = true;
     launchError = null;
+    lastCmdline = null;
+    console.log('[launch] invoking launch_reforger', { server: selectedMap.server });
     try {
       const r = await launchReforger(selectedMap.server, null);
+      console.log('[launch] result', r);
+      lastCmdline = r.cmdline;
       if (!r.ok) {
-        launchError = r.error ?? 'launch failed';
+        launchError = r.error ?? 'launch failed (no detail)';
       }
-      // Reforger spawn returns immediately — the game takes its own
-      // 30-60s to actually open. Leave the button in "Launching…" state
-      // briefly so it feels intentional.
+      // Reforger spawn returns immediately — Steam takes its own 30-60s
+      // to actually open the game. Hold "Launching…" briefly so the
+      // click feels intentional.
       setTimeout(() => (launching = false), 1500);
     } catch (err) {
-      launchError = err instanceof Error ? err.message : String(err);
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[launch] invoke threw', err);
+      launchError = `invoke failed: ${msg}`;
       launching = false;
     }
   }
@@ -178,6 +188,9 @@
         {#if launchError}
           <span class="info-label warn">Launch failed</span>
           <span class="info-hint launch-error">{launchError}</span>
+          {#if lastCmdline}
+            <span class="cmdline-debug">cmd: <code>{lastCmdline}</code></span>
+          {/if}
         {:else if !armaStore.isReady}
           <span class="info-label warn">Reforger</span>
           <span class="info-hint">
@@ -441,6 +454,18 @@
     font-style: normal;
     color: #c97b70;
     font-size: 11px;
+  }
+  .cmdline-debug {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #5fa0bc;
+    margin-top: 6px;
+    font-style: normal;
+    word-break: break-all;
+  }
+  .cmdline-debug code {
+    color: #b9deeb;
   }
 
   .enter-btn {

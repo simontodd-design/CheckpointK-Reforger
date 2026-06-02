@@ -1,25 +1,25 @@
-//! Reforger launch — via Steam, not direct exe.
+//! Reforger launch — via the steam:// URL protocol.
 //!
-//! Spawning ArmaReforgerSteam.exe directly causes:
-//!     Steamworks: SteamAPI_Init failed. Is Steam running?
-//!     Could not initialize platform services.
-//!     Unable to initialize the game
-//! because the game can't find a parent Steam process to back its API.
+//! Two prior approaches failed:
+//!   1. ArmaReforgerSteam.exe direct spawn → SteamAPI_Init failed
+//!   2. Steam.exe -applaunch <id> <args> → spawns Steam.exe but the
+//!      cold-start handoff to the running Steam process drops the
+//!      -applaunch args (PID returns but game never launches).
 //!
-//! Instead we spawn `<SteamPath>\Steam.exe -applaunch 1874880 <args>`.
-//! Steam ensures it's running, signs the user in if needed, and starts
-//! Reforger as if from the library UI — Steamworks initializes cleanly
-//! and our `-connect IP:PORT` is forwarded through. This is the same
-//! approach DZSA / battlemetrics use for DayZ joins.
+//! The robust approach is `steam://run/<appid>//<args>` opened via the
+//! OS shell. Steam owns the URL protocol handler; whether Steam is
+//! running or not, the shell routes the call and Steam processes it
+//! the same way clicking "Play" in the library does.
+//!
+//! Args after `//` are URL-encoded; `+` decodes to a space. So
+//! `steam://run/1874880//-connect+127.0.0.1:2001` lands as Reforger
+//! command line `-connect 127.0.0.1:2001`.
 //!
 //! Steam's app ID for Arma Reforger client is 1874880.
 
-use std::path::PathBuf;
 use std::process::Command;
 
 use serde::Serialize;
-
-use crate::arma::find_steam_path;
 
 const ARMA_APP_ID: &str = "1874880";
 
@@ -28,7 +28,7 @@ pub struct LaunchResult {
     pub ok: bool,
     pub pid: Option<u32>,
     pub error: Option<String>,
-    /// The full command line we ran, useful for surfacing in dev.
+    /// The URL or command line we opened, useful for surfacing in dev.
     pub cmdline: Option<String>,
 }
 
@@ -37,75 +37,62 @@ pub fn launch_reforger(
     server: Option<String>,
     password: Option<String>,
 ) -> LaunchResult {
-    let steam_dir = match find_steam_path() {
-        Some(p) => p,
-        None => {
-            return err("Steam install not found — is Steam installed?");
-        }
-    };
-    let steam_exe = steam_dir.join("Steam.exe");
-    if !steam_exe.exists() {
-        return err(format!(
-            "Steam.exe not found at expected path: {}",
-            steam_exe.display()
-        ));
-    }
-
-    let mut cmd = Command::new(&steam_exe);
-    cmd.arg("-applaunch").arg(ARMA_APP_ID);
-
-    if let Some(server) = server.as_deref().filter(|s| !s.is_empty()) {
-        cmd.arg("-connect").arg(server);
+    let mut url = format!("steam://run/{ARMA_APP_ID}");
+    let mut args: Vec<String> = Vec::new();
+    if let Some(s) = server.as_deref().filter(|s| !s.is_empty()) {
+        args.push("-connect".into());
+        args.push(s.to_string());
         if let Some(pw) = password.as_deref().filter(|s| !s.is_empty()) {
-            cmd.arg("-password").arg(pw);
+            args.push("-password".into());
+            args.push(pw.to_string());
         }
     }
+    if !args.is_empty() {
+        url.push_str("//");
+        // Steam URL protocol uses '+' to encode the spaces between args.
+        url.push_str(&args.join("+"));
+    }
 
-    // Build a human-readable cmdline for logs/error reports before spawn.
-    let cmdline = format_cmdline(&steam_exe, &server, &password);
+    open_url(&url)
+}
 
-    match cmd.spawn() {
+#[cfg(windows)]
+fn open_url(url: &str) -> LaunchResult {
+    // `cmd /C start "" <url>` — the empty "" is the title placeholder
+    // start expects when its first arg is quoted.
+    match Command::new("cmd")
+        .args(["/C", "start", "", url])
+        .spawn()
+    {
         Ok(child) => LaunchResult {
             ok: true,
             pid: Some(child.id()),
             error: None,
-            cmdline: Some(cmdline),
+            cmdline: Some(url.to_string()),
         },
         Err(e) => LaunchResult {
             ok: false,
             pid: None,
-            error: Some(format!("spawn failed: {e}")),
-            cmdline: Some(cmdline),
+            error: Some(format!("cmd start failed: {e}")),
+            cmdline: Some(url.to_string()),
         },
     }
 }
 
-fn err(msg: impl Into<String>) -> LaunchResult {
-    LaunchResult {
-        ok: false,
-        pid: None,
-        error: Some(msg.into()),
-        cmdline: None,
+#[cfg(not(windows))]
+fn open_url(url: &str) -> LaunchResult {
+    match Command::new("xdg-open").arg(url).spawn() {
+        Ok(child) => LaunchResult {
+            ok: true,
+            pid: Some(child.id()),
+            error: None,
+            cmdline: Some(url.to_string()),
+        },
+        Err(e) => LaunchResult {
+            ok: false,
+            pid: None,
+            error: Some(format!("xdg-open failed: {e}")),
+            cmdline: Some(url.to_string()),
+        },
     }
-}
-
-fn format_cmdline(
-    steam_exe: &PathBuf,
-    server: &Option<String>,
-    password: &Option<String>,
-) -> String {
-    let mut parts: Vec<String> = vec![
-        format!("\"{}\"", steam_exe.display()),
-        "-applaunch".into(),
-        ARMA_APP_ID.into(),
-    ];
-    if let Some(s) = server.as_deref().filter(|s| !s.is_empty()) {
-        parts.push("-connect".into());
-        parts.push(s.into());
-        if password.as_deref().filter(|p| !p.is_empty()).is_some() {
-            parts.push("-password".into());
-            parts.push("***".into());
-        }
-    }
-    parts.join(" ")
 }
