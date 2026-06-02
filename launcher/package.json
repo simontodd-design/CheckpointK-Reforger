@@ -1,0 +1,13 @@
+{
+  "name": "@ck/launcher",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "CK Launcher — Tauri (Rust shell) + SvelteKit frontend. Player-facing.",
+  "scripts": {
+    "dev": "echo 'CK Launcher scaffold — Phase 1 wires Tauri dev here'",
+    "build": "echo 'CK Launcher build — Phase 1'",
+    "typecheck": "echo 'no sources yet'",
+    "test": "echo 'no tests yet'"
+  }
+}

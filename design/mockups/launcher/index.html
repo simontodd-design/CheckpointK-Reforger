@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CK Launcher &mdash; Refuge</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .featured {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 0;
+    border: 1px solid var(--frost-800);
+    background: rgba(10, 14, 19, 0.7);
+    margin-bottom: 36px;
+    overflow: hidden;
+  }
+  .featured .portrait {
+    background: radial-gradient(ellipse at 40% 30%, #142838 0%, #05080B 70%, #000 100%);
+    aspect-ratio: 4/5;
+    display: flex; align-items: flex-end; justify-content: center;
+    position: relative;
+    border-right: 1px solid var(--frost-800);
+  }
+  .featured .portrait::before { content: ''; position: absolute; inset: 16px; border: 1px solid var(--frost-800); pointer-events: none; }
+  .featured .portrait .silhouette {
+    width: 70%; height: 78%;
+    background: linear-gradient(180deg, transparent 0%, rgba(15, 27, 38, 0.6) 60%, var(--void-900) 100%),
+                radial-gradient(ellipse at 50% 30%, #2E5B72 0%, #1E3D4F 40%, #0F1B26 80%);
+    clip-path: polygon(38% 0%, 62% 0%, 65% 18%, 75% 30%, 78% 100%, 22% 100%, 25% 30%, 35% 18%);
+  }
+  .featured .portrait .frame { position: absolute; bottom: 16px; left: 16px; right: 16px; padding: 10px 14px; background: rgba(0,0,0,0.85); border: 1px solid var(--frost-800); }
+  .featured .portrait .frame .loc-label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--frost-700); margin-bottom: 2px; }
+  .featured .portrait .frame .loc { font-size: 13px; color: var(--frost-200); display: flex; align-items: center; gap: 8px; }
+  .featured .portrait .frame .loc::before { content: ''; width: 8px; height: 8px; background: var(--ember-500); }
+
+  .featured .details { padding: 36px 40px; display: flex; flex-direction: column; }
+  .featured .premium-tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--ember-500); color: var(--ember-300); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; width: fit-content; margin-bottom: 12px; }
+  .featured .premium-tag svg { width: 11px; height: 11px; stroke: var(--ember-300); fill: var(--ember-300); }
+  .featured .charname { font-family: 'Cinzel', serif; font-size: 36px; letter-spacing: 0.04em; color: var(--frost-50); margin-bottom: 6px; line-height: 1.1; }
+  .featured .role { font-size: 13px; color: var(--frost-300); margin-bottom: 22px; letter-spacing: 0.06em; }
+  .featured .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 26px; padding: 18px 0; border-top: 1px solid var(--void-50); border-bottom: 1px solid var(--void-50); }
+  .featured .stat .v { font-family: 'JetBrains Mono', monospace; font-size: 22px; color: var(--frost-50); display: block; margin-bottom: 4px; font-weight: 500; }
+  .featured .stat .l { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--frost-700); }
+  .featured .xp-row { margin-bottom: 24px; }
+  .featured .xp-row .xp-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--frost-500); margin-bottom: 6px; letter-spacing: 0.08em; }
+  .featured .xp-row .xp-label .xp-num { font-family: 'JetBrains Mono', monospace; color: var(--frost-200); }
+  .featured .xp-row .xp-bar { height: 4px; background: var(--void-100); position: relative; }
+  .featured .xp-row .xp-bar > div { height: 100%; background: var(--arc-500); width: 64%; }
+
+  .featured .narrative { font-size: 14px; color: var(--frost-200); line-height: 1.65; margin-bottom: 28px; font-style: italic; }
+  .featured .narrative::before { content: '"'; font-family: 'Cinzel', serif; font-size: 32px; color: var(--frost-700); margin-right: 4px; line-height: 0; vertical-align: -8px; }
+
+  .featured .pending { display: flex; gap: 14px; margin-bottom: 28px; flex-wrap: wrap; }
+  .featured .pending .chip { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border: 1px solid var(--frost-800); background: rgba(15, 27, 38, 0.5); font-size: 11px; color: var(--frost-200); }
+  .featured .pending .chip .dot { width: 6px; height: 6px; background: var(--arc-500); }
+  .featured .pending .chip .dot.warm { background: var(--ember-500); }
+
+  .featured .cta-row { display: flex; gap: 12px; }
+  .featured .cta-row .btn-primary { flex: 2; }
+  .featured .cta-row .btn { flex: 1; }
+
+  .others-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+  .others-head h2 { font-family: 'Cinzel', serif; font-size: 17px; font-weight: 500; color: var(--frost-200); letter-spacing: 0.06em; }
+  .others-head .small-link { font-size: 11px; color: var(--frost-500); text-decoration: none; letter-spacing: 0.08em; }
+  .others-head .small-link:hover { color: var(--frost-200); }
+
+  .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .slot {
+    border: 1px solid var(--void-50);
+    background: rgba(10, 14, 19, 0.5);
+    aspect-ratio: 3/4;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: border-color 150ms;
+  }
+  .slot:hover { border-color: var(--frost-800); }
+  .slot .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: auto; }
+  .slot .head .lvl { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--frost-500); }
+  .slot .silhouette {
+    width: 50px; height: 64px;
+    background: radial-gradient(ellipse at 50% 30%, var(--frost-700) 0%, var(--frost-900) 80%);
+    clip-path: polygon(38% 0%, 62% 0%, 65% 18%, 75% 30%, 78% 100%, 22% 100%, 25% 30%, 35% 18%);
+    margin: 14px auto 18px;
+  }
+  .slot .name { font-family: 'Cinzel', serif; font-size: 16px; color: var(--frost-50); text-align: center; margin-bottom: 4px; }
+  .slot .loc { font-size: 11px; color: var(--frost-500); text-align: center; margin-bottom: 14px; }
+  .slot .vital { height: 2px; background: var(--void-100); margin-bottom: 6px; position: relative; }
+  .slot .vital > div { height: 100%; }
+
+  .slot.empty {
+    border-style: dashed;
+    border-color: var(--frost-800);
+    display: flex; align-items: center; justify-content: center;
+    background: transparent;
+  }
+  .slot.empty .add { text-align: center; }
+  .slot.empty .add svg { width: 28px; height: 28px; stroke: var(--frost-700); fill: none; stroke-width: 1.4; margin-bottom: 8px; }
+  .slot.empty .add div { font-size: 11px; color: var(--frost-500); letter-spacing: 0.10em; text-transform: uppercase; }
+  .slot.empty:hover { border-color: var(--frost-500); }
+  .slot.empty:hover .add svg { stroke: var(--frost-300); }
+  .slot.empty:hover .add div { color: var(--frost-200); }
+
+  .slot.dead { opacity: 0.65; }
+  .slot.dead .name { color: var(--blood-300); }
+  .slot.dead .loc { color: var(--blood-500); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- LEFT RAIL -->
+  <aside class="rail">
+    <div class="rail-logo">
+      <img src="../../CKlogo.png" alt="CK">
+      <div>
+        <span class="name">Checkpoint K</span>
+        <span class="sub">Refuge build 1.4.2</span>
+      </div>
+    </div>
+
+    <nav>
+      <a href="index.html" class="active">
+        <svg viewBox="0 0 24 24"><path d="M3 10v11h6v-6h6v6h6V10L12 3z"/></svg>
+        <span>Refuge</span>
+      </a>
+      <a href="news.html">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6M4.22 4.22l4.24 4.24m7.07 7.07l4.24 4.24M1 12h6m10 0h6M4.22 19.78l4.24-4.24m7.07-7.07l4.24-4.24"/></svg>
+        <span>Radio</span>
+      </a>
+      <a href="store.html">
+        <svg viewBox="0 0 24 24"><path d="M3 9h18l-2 11H5L3 9zm5 0V5a4 4 0 0 1 8 0v4"/></svg>
+        <span>Store</span>
+      </a>
+      <a href="profile.html">
+        <svg viewBox="0 0 24 24"><path d="M3 21v-2a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Field log</span>
+      </a>
+      <a href="settings.html">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Settings</span>
+      </a>
+    </nav>
+
+    <div class="rail-foot">
+      <div class="rail-user">
+        <div class="avatar">ST</div>
+        <div class="who">
+          Simon T
+          <span class="handle">@simontodd-design</span>
+        </div>
+      </div>
+      <div class="rail-versions">
+        <div class="v-row"><span class="k">Launcher</span><span class="v">v1.4.2</span></div>
+        <div class="v-row"><span class="k">Mod</span><span class="v">v1.4.2</span></div>
+        <div class="v-row"><span class="k">Core</span><span class="v">eu-1</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <h1>Refuge</h1>
+      <div class="meta">
+        <span>Cluster &mdash; <span style="color: var(--frost-200);">all stations green</span></span>
+        <span class="scrip">◆ 1,247 scrip</span>
+        <div class="bell" title="2 unread broadcasts">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURED CHARACTER -->
+    <div class="featured">
+      <div class="portrait">
+        <div class="silhouette"></div>
+        <div class="frame">
+          <div class="loc-label">Last seen</div>
+          <div class="loc">Arland Refuge &middot; sleeping</div>
+        </div>
+      </div>
+
+      <div class="details">
+        <div class="premium-tag">
+          <svg viewBox="0 0 24 24" stroke-width="0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Refuge sponsor
+        </div>
+
+        <div class="charname">Marko Petrov</div>
+        <div class="role">Level 14 &middot; Field Medic &middot; 47 days survived</div>
+
+        <div class="stats">
+          <div class="stat"><span class="v">14</span><div class="l">Level</div></div>
+          <div class="stat"><span class="v">23,860</span><div class="l">Total XP</div></div>
+          <div class="stat"><span class="v">+1,240</span><div class="l">XP today</div></div>
+        </div>
+
+        <div class="xp-row">
+          <div class="xp-label"><span>Progress to level 15</span><span class="xp-num">3,260 / 5,100</span></div>
+          <div class="xp-bar"><div></div></div>
+        </div>
+
+        <div class="narrative">Slept four hours in the lamp room. Yelena's medkit is on the bench &mdash; she'll want it back when you're awake.</div>
+
+        <div class="pending">
+          <span class="chip"><span class="dot"></span>2 quests in progress</span>
+          <span class="chip"><span class="dot warm"></span>1 delivery to claim</span>
+        </div>
+
+        <div class="cta-row">
+          <button class="btn btn-primary btn-lg">Wake up &mdash; return to Arland</button>
+          <button class="btn">Customise</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- OTHER CHARACTERS -->
+    <div class="others-head">
+      <h2>Other survivors</h2>
+      <a href="#" class="small-link">5 slots used &middot; 2 free</a>
+    </div>
+
+    <div class="slots">
+      <div class="slot">
+        <div class="head">
+          <span class="label">Alt</span>
+          <span class="lvl">Lv 8</span>
+        </div>
+        <div class="silhouette"></div>
+        <div class="name">Sasha Kane</div>
+        <div class="loc">Everon &middot; field</div>
+        <div class="vital"><div style="width: 78%; background: var(--frost-300);"></div></div>
+        <div class="vital"><div style="width: 54%; background: var(--frost-500);"></div></div>
+        <div class="vital"><div style="width: 41%; background: var(--frost-500);"></div></div>
+      </div>
+
+      <div class="slot">
+        <div class="head">
+          <span class="label">Alt</span>
+          <span class="lvl">Lv 3</span>
+        </div>
+        <div class="silhouette" style="background: radial-gradient(ellipse at 50% 30%, var(--bone-300) 0%, var(--frost-900) 80%);"></div>
+        <div class="name">Anya</div>
+        <div class="loc">Arland &middot; new</div>
+        <div class="vital"><div style="width: 100%; background: var(--frost-300);"></div></div>
+        <div class="vital"><div style="width: 88%; background: var(--frost-500);"></div></div>
+        <div class="vital"><div style="width: 70%; background: var(--frost-500);"></div></div>
+      </div>
+
+      <div class="slot dead">
+        <div class="head">
+          <span class="label">Alt</span>
+          <span class="lvl" style="color: var(--blood-300);">Lv 11</span>
+        </div>
+        <div class="silhouette" style="background: radial-gradient(ellipse at 50% 30%, var(--blood-700) 0%, var(--void-900) 80%);"></div>
+        <div class="name">Dmitri</div>
+        <div class="loc">Kolguyev &middot; lost</div>
+        <div class="vital"><div style="width: 0%; background: var(--blood-500);"></div></div>
+        <div class="vital"><div style="width: 0%; background: var(--blood-500);"></div></div>
+        <div class="vital"><div style="width: 0%; background: var(--blood-500);"></div></div>
+      </div>
+
+      <div class="slot empty">
+        <div class="add">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+          <div>Create survivor</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

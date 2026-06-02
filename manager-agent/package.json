@@ -1,0 +1,27 @@
+{
+  "name": "@ck/manager-agent",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Per-host process supervisor — spawns Reforger servers, tails logs, syncs mods, talks to CK Core over WS",
+  "main": "src/main.ts",
+  "scripts": {
+    "dev": "bun --hot src/main.ts",
+    "build": "bun build src/main.ts --outdir dist --target bun --compile --outfile dist/ck-manager-agent",
+    "start": "bun src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "execa": "^9.4.0",
+    "pino": "^9.4.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "@types/ws": "^8.5.0",
+    "vitest": "^2.1.0",
+    "typescript": "^5.5.0"
+  }
+}

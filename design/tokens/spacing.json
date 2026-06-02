@@ -1,0 +1,48 @@
+{
+  "_meta": {
+    "version": "0.0.1",
+    "notes": "Spacing scale. 4px base unit. Used for padding, margins, gaps. Not for typography (see typography.json line heights)."
+  },
+  "scale": {
+    "0":   "0",
+    "px":  "1px",
+    "0.5": "2px",
+    "1":   "4px",
+    "1.5": "6px",
+    "2":   "8px",
+    "3":   "12px",
+    "4":   "16px",
+    "5":   "20px",
+    "6":   "24px",
+    "8":   "32px",
+    "10":  "40px",
+    "12":  "48px",
+    "16":  "64px",
+    "20":  "80px",
+    "24":  "96px",
+    "32":  "128px"
+  },
+  "semantic": {
+    "componentPaddingX":   "{scale.4}",
+    "componentPaddingY":   "{scale.2}",
+    "cardPaddingX":        "{scale.6}",
+    "cardPaddingY":        "{scale.5}",
+    "sectionGap":          "{scale.8}",
+    "iconButtonInset":     "{scale.2}",
+    "menuItemGap":         "{scale.3}",
+    "navHeight":           "{scale.16}"
+  },
+  "radius": {
+    "none":   "0",
+    "sm":     "2px",
+    "md":     "4px",
+    "lg":     "6px",
+    "xl":     "8px",
+    "round":  "9999px"
+  },
+  "borderWidth": {
+    "thin":   "1px",
+    "medium": "2px",
+    "thick":  "3px"
+  }
+}

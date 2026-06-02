@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "version": "0.0.1",
+    "notes": "Motion is sharp and responsive — survival game feel. Keep durations short. Reserve longer motion for set-piece transitions (cross-server, loading)."
+  },
+  "duration": {
+    "instant":   "0ms",
+    "fast":      "120ms",
+    "base":      "200ms",
+    "slow":      "320ms",
+    "page":      "420ms",
+    "cinematic": "1200ms"
+  },
+  "easing": {
+    "linear":      "linear",
+    "easeIn":      "cubic-bezier(0.4, 0, 1, 1)",
+    "easeOut":     "cubic-bezier(0, 0, 0.2, 1)",
+    "easeInOut":   "cubic-bezier(0.4, 0, 0.2, 1)",
+    "snap":        "cubic-bezier(0.5, 1.8, 0.5, 1)",
+    "decel":       "cubic-bezier(0.05, 0.7, 0.1, 1)"
+  },
+  "semantic": {
+    "hover":           { "duration": "{duration.fast}", "easing": "{easing.easeOut}" },
+    "press":           { "duration": "{duration.fast}", "easing": "{easing.easeIn}" },
+    "tooltip":         { "duration": "{duration.base}", "easing": "{easing.easeOut}" },
+    "menuOpen":        { "duration": "{duration.base}", "easing": "{easing.decel}" },
+    "pageTransition":  { "duration": "{duration.page}", "easing": "{easing.easeInOut}" },
+    "loadingFade":     { "duration": "{duration.cinematic}", "easing": "{easing.easeInOut}" }
+  },
+  "principles": [
+    "Default to fast. The world is hostile — UI shouldn't make players wait.",
+    "Use decel easing for elements entering view (they should settle, not bounce).",
+    "Reserve cinematic durations for cross-server transitions and death.",
+    "Never use spring/bounce in survival UI — it reads as toy-like."
+  ]
+}

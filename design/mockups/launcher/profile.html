@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CK Launcher &mdash; Field log</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .profile-grid { display: grid; grid-template-columns: 1fr 320px; gap: 32px; margin-bottom: 32px; }
+
+  .summary-card {
+    border: 1px solid var(--frost-800);
+    background: rgba(10, 14, 19, 0.6);
+    padding: 28px 32px;
+  }
+  .sum-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .sum-head .charname { font-family: 'Cinzel', serif; font-size: 22px; color: var(--frost-50); letter-spacing: 0.04em; }
+  .sum-head .switcher { font-size: 11px; color: var(--frost-500); display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .sum-head .switcher svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .sum-head .switcher:hover { color: var(--frost-200); }
+
+  .lvl-band { display: flex; align-items: center; gap: 24px; padding: 20px 0; border-top: 1px solid var(--void-50); border-bottom: 1px solid var(--void-50); margin-bottom: 24px; }
+  .lvl-band .lvl-num { font-family: 'Cinzel', serif; font-size: 56px; color: var(--frost-50); line-height: 1; }
+  .lvl-band .lvl-info { flex: 1; }
+  .lvl-band .lvl-info .l { font-size: 11px; color: var(--frost-500); letter-spacing: 0.10em; text-transform: uppercase; margin-bottom: 4px; }
+  .lvl-band .lvl-info .v { font-size: 14px; color: var(--frost-100); margin-bottom: 10px; }
+  .lvl-band .lvl-info .bar { height: 4px; background: var(--void-100); }
+  .lvl-band .lvl-info .bar > div { height: 100%; background: var(--arc-500); width: 64%; }
+  .lvl-band .lvl-info .meta { display: flex; justify-content: space-between; margin-top: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--frost-500); }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-tile { padding: 14px 16px; background: rgba(15, 27, 38, 0.5); border: 1px solid var(--void-50); }
+  .stat-tile .v { font-family: 'JetBrains Mono', monospace; font-size: 22px; color: var(--frost-50); display: block; margin-bottom: 4px; font-weight: 500; }
+  .stat-tile .l { font-size: 10px; color: var(--frost-500); letter-spacing: 0.10em; text-transform: uppercase; }
+  .stat-tile.warm .v { color: var(--ember-300); }
+
+  .skills-section { padding-top: 16px; }
+  .skill-row { display: grid; grid-template-columns: 100px 1fr 70px; gap: 14px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--void-50); }
+  .skill-row:last-child { border-bottom: none; }
+  .skill-row .name { font-size: 13px; color: var(--frost-200); }
+  .skill-row .bar { height: 3px; background: var(--void-100); }
+  .skill-row .bar > div { height: 100%; }
+  .skill-row .val { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--frost-500); text-align: right; }
+
+  .side-stack { display: flex; flex-direction: column; gap: 18px; }
+  .side-c { border: 1px solid var(--void-50); background: rgba(10, 14, 19, 0.5); padding: 22px; }
+  .side-c .h { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 0.08em; color: var(--frost-200); margin-bottom: 16px; }
+
+  .rep-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--void-50); }
+  .rep-row:last-child { border-bottom: none; }
+  .rep-row .name { flex: 1; font-size: 12px; color: var(--frost-200); }
+  .rep-row .bar { width: 80px; height: 3px; background: var(--void-100); position: relative; }
+  .rep-row .bar > div { height: 100%; }
+  .rep-row .bar.neg::after { content: ''; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--frost-700); }
+
+  .ach-row { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--void-50); }
+  .ach-row:last-child { border-bottom: none; }
+  .ach-row .ico { width: 32px; height: 32px; border: 1px solid var(--frost-800); display: flex; align-items: center; justify-content: center; flex: 0 0 32px; }
+  .ach-row .ico svg { width: 16px; height: 16px; stroke: var(--ember-300); fill: none; stroke-width: 1.5; }
+  .ach-row .ico.locked { border-color: var(--void-50); }
+  .ach-row .ico.locked svg { stroke: var(--frost-700); }
+  .ach-row .name { font-size: 12px; color: var(--frost-100); margin-bottom: 2px; font-weight: 500; }
+  .ach-row .desc { font-size: 11px; color: var(--frost-500); line-height: 1.5; }
+  .ach-row.locked .name { color: var(--frost-700); }
+
+  .lb-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--void-50); font-size: 12px; }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-row .rank { font-family: 'JetBrains Mono', monospace; color: var(--frost-500); width: 36px; }
+  .lb-row .board { flex: 1; color: var(--frost-200); }
+  .lb-row .pos { font-family: 'JetBrains Mono', monospace; color: var(--frost-100); }
+  .lb-row .pos.top { color: var(--arc-500); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail">
+    <div class="rail-logo">
+      <img src="../../CKlogo.png" alt="CK">
+      <div>
+        <span class="name">Checkpoint K</span>
+        <span class="sub">Refuge build 1.4.2</span>
+      </div>
+    </div>
+    <nav>
+      <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 10v11h6v-6h6v6h6V10L12 3z"/></svg><span>Refuge</span></a>
+      <a href="news.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="3"/></svg><span>Radio</span></a>
+      <a href="store.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 9h18l-2 11H5L3 9z"/></svg><span>Store</span></a>
+      <a href="profile.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 21v-2a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v2"/><circle cx="12" cy="7" r="4"/></svg><span>Field log</span></a>
+      <a href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="3"/></svg><span>Settings</span></a>
+    </nav>
+    <div class="rail-foot">
+      <div class="rail-user">
+        <div class="avatar">ST</div>
+        <div class="who">Simon T<span class="handle">@simontodd-design</span></div>
+      </div>
+      <div class="rail-versions">
+        <div class="v-row"><span class="k">Launcher</span><span class="v">v1.4.2</span></div>
+        <div class="v-row"><span class="k">Mod</span><span class="v">v1.4.2</span></div>
+        <div class="v-row"><span class="k">Core</span><span class="v">eu-1</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1>Field log</h1>
+      <div class="meta"><span class="scrip">◆ 1,247 scrip</span></div>
+    </div>
+
+    <div class="profile-grid">
+      <div class="summary-card">
+        <div class="sum-head">
+          <span class="charname">Marko Petrov</span>
+          <span class="switcher">Switch survivor <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+
+        <div class="lvl-band">
+          <div class="lvl-num">14</div>
+          <div class="lvl-info">
+            <div class="l">Level &middot; Field medic</div>
+            <div class="v">3,260 XP to level 15</div>
+            <div class="bar"><div></div></div>
+            <div class="meta"><span>23,860 XP total</span><span>+1,240 today</span></div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-tile"><span class="v">47</span><div class="l">Days survived</div></div>
+          <div class="stat-tile"><span class="v">312</span><div class="l">Quests done</div></div>
+          <div class="stat-tile"><span class="v">8</span><div class="l">Deaths</div></div>
+          <div class="stat-tile warm"><span class="v">1,247</span><div class="l">Scrip in hand</div></div>
+          <div class="stat-tile"><span class="v">94</span><div class="l">Infected killed</div></div>
+          <div class="stat-tile"><span class="v">6</span><div class="l">Players killed</div></div>
+          <div class="stat-tile"><span class="v">23</span><div class="l">Revives given</div></div>
+          <div class="stat-tile"><span class="v">38.4 km</span><div class="l">Distance walked</div></div>
+        </div>
+
+        <div class="skills-section">
+          <div class="label" style="margin-bottom: 12px;">Skill tree &mdash; field medic specialisation</div>
+          <div class="skill-row">
+            <div class="name">First aid</div>
+            <div class="bar"><div style="width: 88%; background: var(--frost-300);"></div></div>
+            <div class="val">88 / 100</div>
+          </div>
+          <div class="skill-row">
+            <div class="name">Marksmanship</div>
+            <div class="bar"><div style="width: 62%; background: var(--frost-300);"></div></div>
+            <div class="val">62 / 100</div>
+          </div>
+          <div class="skill-row">
+            <div class="name">Endurance</div>
+            <div class="bar"><div style="width: 71%; background: var(--frost-300);"></div></div>
+            <div class="val">71 / 100</div>
+          </div>
+          <div class="skill-row">
+            <div class="name">Scavenging</div>
+            <div class="bar"><div style="width: 54%; background: var(--frost-300);"></div></div>
+            <div class="val">54 / 100</div>
+          </div>
+          <div class="skill-row">
+            <div class="name">Survival</div>
+            <div class="bar"><div style="width: 79%; background: var(--frost-300);"></div></div>
+            <div class="val">79 / 100</div>
+          </div>
+          <div class="skill-row">
+            <div class="name">Crafting</div>
+            <div class="bar"><div style="width: 33%; background: var(--frost-500);"></div></div>
+            <div class="val">33 / 100</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-stack">
+        <div class="side-c">
+          <div class="h">Reputation &mdash; enclaves</div>
+          <div class="rep-row">
+            <span class="name">Lazarus Project</span>
+            <div class="bar"><div style="width: 72%; background: var(--arc-500);"></div></div>
+          </div>
+          <div class="rep-row">
+            <span class="name">Vyshka Refuge</span>
+            <div class="bar"><div style="width: 88%; background: var(--frost-300);"></div></div>
+          </div>
+          <div class="rep-row">
+            <span class="name">Bayou Traders</span>
+            <div class="bar neg"><div style="width: 58%; background: var(--ember-500);"></div></div>
+          </div>
+          <div class="rep-row">
+            <span class="name">Frost Watch</span>
+            <div class="bar neg"><div style="width: 31%; background: var(--blood-500); margin-left: 22%;"></div></div>
+          </div>
+          <div class="rep-row">
+            <span class="name">Field Medics</span>
+            <div class="bar"><div style="width: 94%; background: var(--frost-300);"></div></div>
+          </div>
+          <div class="rep-row">
+            <span class="name">Remnant</span>
+            <div class="bar neg"><div style="width: 0%;"></div></div>
+          </div>
+          <a href="#" style="display: block; margin-top: 14px; font-size: 11px; color: var(--frost-500); text-decoration: none; letter-spacing: 0.08em; text-align: center;">View all 13 enclaves &rarr;</a>
+        </div>
+
+        <div class="side-c">
+          <div class="h">Cluster standings</div>
+          <div class="lb-row">
+            <span class="rank">#147</span>
+            <span class="board">Most quests done</span>
+            <span class="pos">312</span>
+          </div>
+          <div class="lb-row">
+            <span class="rank">#84</span>
+            <span class="board">Revives given</span>
+            <span class="pos">23</span>
+          </div>
+          <div class="lb-row">
+            <span class="rank">#12</span>
+            <span class="board">Field medic XP</span>
+            <span class="pos top">top 5%</span>
+          </div>
+          <div class="lb-row">
+            <span class="rank">#241</span>
+            <span class="board">Total XP</span>
+            <span class="pos">23,860</span>
+          </div>
+          <div class="lb-row">
+            <span class="rank">&mdash;</span>
+            <span class="board">Wealth</span>
+            <span class="pos">unranked</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-grid" style="grid-template-columns: 1fr 1fr;">
+      <div class="side-c">
+        <div class="h">Earned &mdash; 14 of 87</div>
+        <div class="ach-row">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/><circle cx="12" cy="12" r="9"/></svg></div>
+          <div>
+            <div class="name">First light</div>
+            <div class="desc">Survived the Arland tutorial. Earned your travel pass. The world opens.</div>
+          </div>
+        </div>
+        <div class="ach-row">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4-4 7-9 7s-9-3-9-7 4-7 9-7 9 3 9 7z"/></svg></div>
+          <div>
+            <div class="name">Pulled them back</div>
+            <div class="desc">Revive 10 fallen survivors. The Field Medics noticed.</div>
+          </div>
+        </div>
+        <div class="ach-row">
+          <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 2L4 8v8l8 6 8-6V8l-8-6z"/></svg></div>
+          <div>
+            <div class="name">Mainland traveller</div>
+            <div class="desc">Set foot on Everon. The lamps don't reach this far.</div>
+          </div>
+        </div>
+        <div class="ach-row locked">
+          <div class="ico locked"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div>
+            <div class="name">The cold knows you</div>
+            <div class="desc">Reach Kolguyev's volcanic peak and return alive.</div>
+          </div>
+        </div>
+        <div class="ach-row locked">
+          <div class="ico locked"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div>
+            <div class="name">Hundred and counting</div>
+            <div class="desc">Survive 100 days on a single character.</div>
+          </div>
+        </div>
+        <a href="#" style="display: block; margin-top: 14px; font-size: 11px; color: var(--frost-500); text-decoration: none; letter-spacing: 0.08em; text-align: center;">All achievements &rarr;</a>
+      </div>
+
+      <div class="side-c">
+        <div class="h">Recent field log</div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="font-size: 12px; color: var(--frost-200); line-height: 1.6;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span style="color: var(--frost-50);">Q14 turned in</span>
+              <span class="mono" style="font-size: 10px; color: var(--frost-700);">2h ago</span>
+            </div>
+            <span style="color: var(--frost-500);">"Bring antibiotics from Le Moule" &middot; +320 XP, +45 scrip</span>
+          </div>
+          <div style="font-size: 12px; color: var(--frost-200); line-height: 1.6;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span style="color: var(--frost-50);">Revived Yelena</span>
+              <span class="mono" style="font-size: 10px; color: var(--frost-700);">5h ago</span>
+            </div>
+            <span style="color: var(--frost-500);">Coastal road south of Lamentin &middot; First aid +1</span>
+          </div>
+          <div style="font-size: 12px; color: var(--frost-200); line-height: 1.6;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span style="color: var(--frost-50);">Travelled Arland &rarr; Everon</span>
+              <span class="mono" style="font-size: 10px; color: var(--frost-700);">yesterday</span>
+            </div>
+            <span style="color: var(--frost-500);">An-2 flight &middot; Stepan's books still bad</span>
+          </div>
+          <div style="font-size: 12px; color: var(--frost-200); line-height: 1.6;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span style="color: var(--frost-50);">Achievement &mdash; Pulled them back</span>
+              <span class="mono" style="font-size: 10px; color: var(--frost-700);">2 days</span>
+            </div>
+            <span style="color: var(--frost-500);">10th revive. The Field Medics noticed.</span>
+          </div>
+          <div style="font-size: 12px; color: var(--blood-300); line-height: 1.6;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span style="color: var(--blood-300);">Death &mdash; Dmitri (Lv 11)</span>
+              <span class="mono" style="font-size: 10px; color: var(--blood-500);">4 days</span>
+            </div>
+            <span style="color: var(--blood-500);">Kolguyev volcanic ridge &middot; infected horde</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+[install]
+# Strict workspace resolution
+exact = true
+
+[install.scopes]
+# Empty — placeholder for future private registries
+
+[test]
+# Vitest is the test runner — Bun's test runner is not used in this project
+preload = []

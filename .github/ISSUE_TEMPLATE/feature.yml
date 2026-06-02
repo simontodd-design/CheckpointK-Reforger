@@ -1,0 +1,54 @@
+name: Feature request
+description: A new feature, enhancement, or change in design
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Why does this need to exist?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you like to see it work?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Suggested phase
+      description: Roughly where in the build guide does this fit?
+      options:
+        - Phase 0 — Foundation
+        - Phase 1 — Cluster + Launcher
+        - Phase 2 — Persistence
+        - Phase 3 — NPCs + Quests
+        - Phase 4 — DBNO + Combat + AI
+        - Phase 5 — Maps
+        - Phase 6 — UI / HUD
+        - Phase 7 — Economy
+        - Phase 8 — Social + Voice
+        - Phase 9 — Admin + Live Ops
+        - Phase 10 — Content
+        - Phase 11 — Polish
+        - Phase 12 — Launch
+        - Post-launch (v2+)
+        - Unsure
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues for duplicates
+          required: true

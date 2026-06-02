@@ -1,0 +1,32 @@
+# Default to LF line endings across the project — consistency between Win dev + Linux prod
+* text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.mp3 binary
+*.ogg binary
+*.wav binary
+*.pak binary
+*.pbo binary
+*.bisign binary
+*.bin binary
+*.zip binary
+
+# Workbench / Enforce Script source — text
+*.c text eol=lf
+*.h text eol=lf
+*.layout text eol=lf
+*.gproj text eol=lf
+*.conf text eol=lf
+*.ent text eol=lf
+
+# Lockfiles — never auto-merge
+bun.lockb binary
+package-lock.json -diff -merge
+yarn.lock -diff -merge
+pnpm-lock.yaml -diff -merge

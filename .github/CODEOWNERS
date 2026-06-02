@@ -1,0 +1,12 @@
+# Default owner for everything in the repo
+* @simontodd-design
+
+# Specific paths
+/core/                @simontodd-design
+/manager/             @simontodd-design
+/manager-agent/       @simontodd-design
+/launcher/            @simontodd-design
+/mod/                 @simontodd-design
+/infra/               @simontodd-design
+/docs/                @simontodd-design
+/.github/             @simontodd-design

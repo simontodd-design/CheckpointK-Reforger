@@ -1,0 +1,91 @@
+# ──── Secrets ──────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ──── Node / Bun ───────────────────────────────────────────────────────
+node_modules/
+.bun/
+bun.lockb
+.pnp.*
+.yarn/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ──── Build outputs ────────────────────────────────────────────────────
+dist/
+build/
+out/
+.svelte-kit/
+.next/
+.nuxt/
+.cache/
+*.tsbuildinfo
+
+# ──── Drizzle ──────────────────────────────────────────────────────────
+core/drizzle/
+
+# ──── Tauri / launcher ─────────────────────────────────────────────────
+launcher/src-tauri/target/
+launcher/src-tauri/gen/
+launcher/dist/
+
+# ──── Reforger / Workbench ─────────────────────────────────────────────
+mod/build/
+mod/profile/
+mod/addons/data/
+mod/.workbench/
+mod/*.pak
+mod/*.tmp
+*.pbo
+*.bisign
+
+# ──── Servers (game install + saves) ───────────────────────────────────
+servers/*/profile/
+servers/*/addons/
+servers/*/save/
+servers/*/logs/
+servers/**/console.log
+
+# ──── Local DB / Redis artifacts (if backing up locally) ───────────────
+*.pid
+pg_dumps/
+*.dump
+
+# ──── Logs ─────────────────────────────────────────────────────────────
+logs/
+*.log
+ck-core-*.log
+ck-manager-*.log
+ck-agent-*.log
+
+# ──── IDE / OS ─────────────────────────────────────────────────────────
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ──── Coverage / test artifacts ────────────────────────────────────────
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# ──── Temp / scratch ───────────────────────────────────────────────────
+*.tmp
+*.bak
+scratch/
+.tmp/

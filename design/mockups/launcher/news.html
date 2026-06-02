@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CK Launcher &mdash; Radio</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .news-grid { display: grid; grid-template-columns: 1fr 280px; gap: 36px; }
+  .feed { display: flex; flex-direction: column; gap: 16px; }
+  .filters { display: flex; gap: 8px; margin-bottom: 22px; }
+  .filter { padding: 7px 14px; font-size: 11px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--frost-500); border: 1px solid var(--void-50); cursor: pointer; background: transparent; }
+  .filter:hover { color: var(--frost-200); }
+  .filter.active { color: var(--frost-50); border-color: var(--frost-500); background: rgba(94,160,188,0.06); }
+
+  .broadcast {
+    border: 1px solid var(--void-50);
+    background: rgba(10, 14, 19, 0.5);
+    padding: 22px 26px;
+    cursor: pointer;
+    transition: border-color 150ms;
+  }
+  .broadcast:hover { border-color: var(--frost-800); }
+  .broadcast.featured { border-left: 2px solid var(--arc-500); }
+  .broadcast.system { border-left: 2px solid var(--frost-700); }
+  .broadcast.event { border-left: 2px solid var(--ember-500); }
+
+  .b-meta { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; font-size: 11px; letter-spacing: 0.08em; }
+  .b-meta .signal { display: inline-flex; align-items: center; gap: 6px; color: var(--arc-500); }
+  .b-meta .signal .bars { display: inline-flex; align-items: end; gap: 2px; }
+  .b-meta .signal .bars span { width: 2px; background: var(--arc-500); }
+  .b-meta .signal .bars span:nth-child(1) { height: 4px; }
+  .b-meta .signal .bars span:nth-child(2) { height: 7px; }
+  .b-meta .signal .bars span:nth-child(3) { height: 10px; }
+  .b-meta .signal .bars span:nth-child(4) { height: 13px; }
+  .b-meta .stamp { color: var(--frost-700); font-family: 'JetBrains Mono', monospace; }
+  .b-meta .category { color: var(--frost-500); text-transform: uppercase; }
+
+  .b-title { font-family: 'Cinzel', serif; font-size: 19px; font-weight: 500; color: var(--frost-50); margin-bottom: 8px; letter-spacing: 0.04em; }
+  .b-excerpt { font-size: 13px; color: var(--frost-200); line-height: 1.65; margin-bottom: 12px; }
+  .b-foot { display: flex; align-items: center; justify-content: space-between; font-size: 11px; }
+  .b-foot .read-more { color: var(--frost-500); letter-spacing: 0.08em; text-transform: uppercase; }
+  .b-foot .read-more:hover { color: var(--frost-200); }
+  .b-foot .tags { display: flex; gap: 8px; }
+  .b-foot .tags span { font-size: 10px; padding: 2px 8px; color: var(--frost-500); border: 1px solid var(--void-50); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .side { display: flex; flex-direction: column; gap: 18px; }
+  .side-card { border: 1px solid var(--void-50); background: rgba(10, 14, 19, 0.5); padding: 20px; }
+  .side-card .h { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 0.08em; color: var(--frost-200); margin-bottom: 14px; }
+
+  .event-item { padding: 12px 0; border-bottom: 1px solid var(--void-50); }
+  .event-item:last-child { border-bottom: none; }
+  .event-item .when { font-size: 10px; color: var(--ember-500); letter-spacing: 0.10em; text-transform: uppercase; margin-bottom: 4px; }
+  .event-item .what { font-size: 13px; color: var(--frost-100); margin-bottom: 3px; }
+  .event-item .where { font-size: 11px; color: var(--frost-500); }
+
+  .cluster-status { display: flex; flex-direction: column; gap: 8px; }
+  .cluster-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .cluster-row .reg { color: var(--frost-200); }
+  .cluster-row .state { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .cluster-row .dot { display: inline-block; width: 6px; height: 6px; background: var(--arc-500); margin-right: 8px; vertical-align: middle; }
+  .cluster-row.busy .dot { background: var(--ember-500); }
+  .cluster-row.busy .state { color: var(--ember-500); }
+  .cluster-row .state.ok { color: var(--arc-500); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail">
+    <div class="rail-logo">
+      <img src="../../CKlogo.png" alt="CK">
+      <div>
+        <span class="name">Checkpoint K</span>
+        <span class="sub">Refuge build 1.4.2</span>
+      </div>
+    </div>
+    <nav>
+      <a href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 10v11h6v-6h6v6h6V10L12 3z"/></svg>
+        <span>Refuge</span>
+      </a>
+      <a href="news.html" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6M4.22 4.22l4.24 4.24m7.07 7.07l4.24 4.24M1 12h6m10 0h6M4.22 19.78l4.24-4.24m7.07-7.07l4.24-4.24"/></svg>
+        <span>Radio</span>
+      </a>
+      <a href="store.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 9h18l-2 11H5L3 9zm5 0V5a4 4 0 0 1 8 0v4"/></svg>
+        <span>Store</span>
+      </a>
+      <a href="profile.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 21v-2a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Field log</span>
+      </a>
+      <a href="settings.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="3"/></svg>
+        <span>Settings</span>
+      </a>
+    </nav>
+    <div class="rail-foot">
+      <div class="rail-user">
+        <div class="avatar">ST</div>
+        <div class="who">Simon T<span class="handle">@simontodd-design</span></div>
+      </div>
+      <div class="rail-versions">
+        <div class="v-row update" title="Click to install launcher v1.4.3"><span class="k">Launcher</span><span class="v">v1.4.2 → v1.4.3</span></div>
+        <div class="v-row"><span class="k">Mod</span><span class="v">v1.4.2</span></div>
+        <div class="v-row"><span class="k">Core</span><span class="v">eu-1</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1>Radio</h1>
+      <div class="meta">
+        <span class="scrip">◆ 1,247 scrip</span>
+      </div>
+    </div>
+
+    <p style="color: var(--frost-500); font-size: 13px; line-height: 1.6; margin-bottom: 18px; max-width: 640px; font-style: italic;">
+      Broadcasts and incoming reports from across the cluster. Tune in when you can &mdash; not everything reaches the Refuge.
+    </p>
+
+    <div style="border: 1px solid var(--arc-700); border-left: 2px solid var(--arc-500); background: rgba(31, 143, 160, 0.06); padding: 14px 18px; margin-bottom: 22px; display: flex; align-items: center; gap: 16px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#4FCFDF" stroke-width="1.6" style="width: 20px; height: 20px; flex: 0 0 20px;"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
+      <div style="flex: 1;">
+        <div style="font-size: 13px; color: var(--frost-50); margin-bottom: 2px;">Launcher update available &mdash; v1.4.3</div>
+        <div style="font-size: 11px; color: var(--frost-200);">Performance improvements + Bronze sigil rendering fix. Installs in seconds, you'll relaunch automatically.</div>
+      </div>
+      <button class="btn btn-primary" style="padding: 9px 18px; font-size: 11px;">Update now</button>
+      <button class="btn" style="padding: 9px 14px; font-size: 11px;">Later</button>
+    </div>
+
+    <div class="filters">
+      <button class="filter active">All bands</button>
+      <button class="filter">Refuge</button>
+      <button class="filter">Field events</button>
+      <button class="filter">System</button>
+    </div>
+
+    <div class="news-grid">
+      <div class="feed">
+        <article class="broadcast featured">
+          <div class="b-meta">
+            <span class="signal">
+              <span class="bars"><span></span><span></span><span></span><span></span></span>
+              Strong signal
+            </span>
+            <span class="stamp">2026.06.01 &middot; 08:14</span>
+            <span class="category">Refuge broadcast</span>
+          </div>
+          <div class="b-title">Patch 1.4.2 &mdash; The lamps are warmer this morning</div>
+          <div class="b-excerpt">The Warden confirms a successful overnight maintenance cycle. The crew reports that Kolguyev's storm patterns now reflect actual atmospheric pressure changes &mdash; the wind will lie to you less. Vendor pricing on the eastern coast has been adjusted following last week's trade chaos.</div>
+          <div class="b-foot">
+            <a href="#" class="read-more">Read full broadcast &rarr;</a>
+            <div class="tags"><span>balance</span><span>weather</span><span>vendors</span></div>
+          </div>
+        </article>
+
+        <article class="broadcast event">
+          <div class="b-meta">
+            <span class="signal" style="color: var(--ember-500);">
+              <span class="bars"><span style="background: var(--ember-500);"></span><span style="background: var(--ember-500);"></span><span style="background: var(--ember-500);"></span><span style="background: var(--ember-500);"></span></span>
+              Live transmission
+            </span>
+            <span class="stamp">Friday &middot; 20:00 GMT</span>
+            <span class="category" style="color: var(--ember-500);">Field event</span>
+          </div>
+          <div class="b-title">The crater wakes &mdash; Kolguyev raid window</div>
+          <div class="b-excerpt">Geothermal activity at the volcanic peak is forecast to surge. Cargo runners report increased risk and increased reward. The Warden recommends a full crew and warm cover &mdash; bring more rounds than you think you need.</div>
+          <div class="b-foot">
+            <a href="#" class="read-more">View briefing &rarr;</a>
+            <div class="tags"><span>raid</span><span>kolguyev</span><span>weekly</span></div>
+          </div>
+        </article>
+
+        <article class="broadcast">
+          <div class="b-meta">
+            <span class="signal" style="color: var(--frost-500);">
+              <span class="bars"><span style="background: var(--frost-500);"></span><span style="background: var(--frost-500);"></span><span style="background: var(--frost-500);"></span><span style="background: var(--frost-800);"></span></span>
+              Faint signal
+            </span>
+            <span class="stamp">2026.05.30 &middot; 22:47</span>
+            <span class="category">Field report</span>
+          </div>
+          <div class="b-title">Survivor account &mdash; the Lazarus enclave moves north</div>
+          <div class="b-excerpt">A scavenger at Le Moule reports the Lazarus medics broke camp three nights running. No-one knows where they've gone. If you see their sigil on a doorpost, the Warden says: leave it alone.</div>
+          <div class="b-foot">
+            <a href="#" class="read-more">Continue listening &rarr;</a>
+            <div class="tags"><span>everon</span><span>lore</span></div>
+          </div>
+        </article>
+
+        <article class="broadcast system">
+          <div class="b-meta">
+            <span class="signal" style="color: var(--frost-700);">
+              <span class="bars"><span style="background: var(--frost-700);"></span><span style="background: var(--frost-700);"></span><span style="background: var(--frost-800);"></span><span style="background: var(--frost-800);"></span></span>
+              System carrier
+            </span>
+            <span class="stamp">2026.05.29 &middot; 03:00</span>
+            <span class="category">Operator notice</span>
+          </div>
+          <div class="b-title">Scheduled maintenance &mdash; 3 to 4am Wednesday</div>
+          <div class="b-excerpt">The cluster goes quiet for an hour. If you're mid-quest, save with an NPC before the window. Sleeping characters at safezones are unaffected.</div>
+          <div class="b-foot">
+            <a href="#" class="read-more">Details &rarr;</a>
+            <div class="tags"><span>maintenance</span></div>
+          </div>
+        </article>
+      </div>
+
+      <aside class="side">
+        <div class="side-card">
+          <div class="h">Upcoming events</div>
+          <div class="event-item">
+            <div class="when">Fri &middot; 20:00 GMT</div>
+            <div class="what">Kolguyev raid window</div>
+            <div class="where">Volcanic peak &middot; 4 hours</div>
+          </div>
+          <div class="event-item">
+            <div class="when">Sat &middot; 14:00 GMT</div>
+            <div class="what">Trader convoy &mdash; Everon</div>
+            <div class="where">Lamentin road &middot; 90 minutes</div>
+          </div>
+          <div class="event-item">
+            <div class="when">Sun &middot; rolling</div>
+            <div class="what">Infected surge &mdash; Arland</div>
+            <div class="where">Coastal sweep &middot; all day</div>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <div class="h">Cluster status</div>
+          <div class="cluster-status">
+            <div class="cluster-row"><span class="reg"><span class="dot"></span>Arland</span><span class="state ok">all clear</span></div>
+            <div class="cluster-row busy"><span class="reg"><span class="dot"></span>Everon</span><span class="state">lively</span></div>
+            <div class="cluster-row"><span class="reg"><span class="dot"></span>Kolguyev</span><span class="state ok">all clear</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

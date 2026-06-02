@@ -1,0 +1,13 @@
+{
+  "name": "@ck/manager",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "CK Manager — admin GUI (SvelteKit, served by CK Core at /manager)",
+  "scripts": {
+    "dev": "echo 'CK Manager scaffold — Phase 1 wires SvelteKit dev server here'",
+    "build": "echo 'CK Manager build — Phase 1'",
+    "typecheck": "echo 'no sources yet'",
+    "test": "echo 'no tests yet'"
+  }
+}

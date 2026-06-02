@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CK Launcher &mdash; Settings</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .settings-grid { display: grid; grid-template-columns: 220px 1fr; gap: 36px; max-width: 880px; }
+  .set-nav { display: flex; flex-direction: column; gap: 2px; }
+  .set-nav a { padding: 10px 14px; font-size: 12px; color: var(--frost-500); text-decoration: none; border-left: 2px solid transparent; }
+  .set-nav a:hover { color: var(--frost-200); }
+  .set-nav a.active { color: var(--frost-50); border-left-color: var(--arc-500); background: rgba(79,207,223,0.04); }
+
+  .set-section { margin-bottom: 36px; }
+  .set-section h2 { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 500; color: var(--frost-100); letter-spacing: 0.06em; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--void-50); }
+
+  .row { display: grid; grid-template-columns: 1fr 240px; gap: 24px; padding: 14px 0; border-bottom: 1px solid var(--void-50); align-items: center; }
+  .row:last-child { border-bottom: none; }
+  .row .label-block .l { font-size: 13px; color: var(--frost-100); margin-bottom: 4px; }
+  .row .label-block .h { font-size: 11px; color: var(--frost-500); line-height: 1.55; }
+  .row .control { text-align: right; }
+
+  .slider { width: 200px; height: 4px; background: var(--void-100); position: relative; cursor: pointer; }
+  .slider > .fill { height: 100%; background: var(--frost-300); }
+  .slider > .thumb { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 12px; height: 12px; background: var(--frost-50); }
+
+  .toggle { width: 44px; height: 22px; background: var(--void-100); position: relative; cursor: pointer; display: inline-block; }
+  .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: var(--frost-500); transition: all 150ms; }
+  .toggle.on { background: rgba(79,207,223,0.15); }
+  .toggle.on::after { left: 25px; background: var(--arc-500); }
+
+  .select-input { padding: 8px 14px; background: transparent; border: 1px solid var(--frost-800); color: var(--frost-100); font-family: inherit; font-size: 12px; min-width: 200px; }
+
+  .account-row { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border: 1px solid var(--void-50); background: rgba(10,14,19,0.5); margin-bottom: 12px; }
+  .account-row .ico { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--frost-800); flex: 0 0 36px; }
+  .account-row .ico svg { width: 18px; height: 18px; stroke: var(--frost-300); fill: none; stroke-width: 1.6; }
+  .account-row .info { flex: 1; }
+  .account-row .info .n { font-size: 13px; color: var(--frost-100); margin-bottom: 2px; }
+  .account-row .info .v { font-size: 11px; color: var(--frost-500); }
+  .account-row .status { font-size: 11px; color: var(--arc-500); letter-spacing: 0.08em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail">
+    <div class="rail-logo">
+      <img src="../../CKlogo.png" alt="CK">
+      <div>
+        <span class="name">Checkpoint K</span>
+        <span class="sub">Refuge build 1.4.2</span>
+      </div>
+    </div>
+    <nav>
+      <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 10v11h6v-6h6v6h6V10L12 3z"/></svg><span>Refuge</span></a>
+      <a href="news.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="3"/></svg><span>Radio</span></a>
+      <a href="store.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 9h18l-2 11H5L3 9z"/></svg><span>Store</span></a>
+      <a href="profile.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 21v-2a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v2"/><circle cx="12" cy="7" r="4"/></svg><span>Field log</span></a>
+      <a href="settings.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="3"/></svg><span>Settings</span></a>
+    </nav>
+    <div class="rail-foot">
+      <div class="rail-user">
+        <div class="avatar">ST</div>
+        <div class="who">Simon T<span class="handle">@simontodd-design</span></div>
+      </div>
+      <div class="rail-versions">
+        <div class="v-row"><span class="k">Launcher</span><span class="v">v1.4.2</span></div>
+        <div class="v-row"><span class="k">Mod</span><span class="v">v1.4.2</span></div>
+        <div class="v-row"><span class="k">Core</span><span class="v">eu-1</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar"><h1>Settings</h1><div class="meta"><span class="scrip">◆ 1,247 scrip</span></div></div>
+
+    <div class="settings-grid">
+      <div class="set-nav">
+        <a href="#" class="active">Account</a>
+        <a href="#">Audio</a>
+        <a href="#">Notifications</a>
+        <a href="#">Display</a>
+        <a href="#">Privacy</a>
+        <a href="#">About</a>
+      </div>
+
+      <div>
+        <div class="set-section">
+          <h2>Account</h2>
+          <div class="account-row">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+            <div class="info"><div class="n">Steam &middot; SimonTodd</div><div class="v">76561198XXXXX &middot; verified</div></div>
+            <span class="status">linked</span>
+          </div>
+          <div class="account-row">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-9 5z"/><path d="M3 7l9 5 9-5"/></svg></div>
+            <div class="info"><div class="n">Discord</div><div class="v">@simontodd</div></div>
+            <span class="status">linked</span>
+          </div>
+          <div class="account-row">
+            <div class="ico"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+            <div class="info"><div class="n">Refuge sponsor</div><div class="v">monthly &middot; renews 24 June 2026</div></div>
+            <span class="status" style="color: var(--ember-500);">active</span>
+          </div>
+        </div>
+
+        <div class="set-section">
+          <h2>Audio</h2>
+          <div class="row">
+            <div class="label-block"><div class="l">Master</div><div class="h">Affects every CK launcher sound.</div></div>
+            <div class="control"><div class="slider"><div class="fill" style="width: 80%;"></div><div class="thumb" style="left: 80%;"></div></div></div>
+          </div>
+          <div class="row">
+            <div class="label-block"><div class="l">UI sounds</div><div class="h">Clicks, transitions, notifications. Quiet by design.</div></div>
+            <div class="control"><div class="slider"><div class="fill" style="width: 60%; background: var(--arc-500);"></div><div class="thumb" style="left: 60%;"></div></div></div>
+          </div>
+          <div class="row">
+            <div class="label-block"><div class="l">Ambient loop</div><div class="h">The launcher's background drone. Mute if you prefer silence.</div></div>
+            <div class="control"><div class="slider"><div class="fill" style="width: 35%; background: var(--frost-500);"></div><div class="thumb" style="left: 35%;"></div></div></div>
+          </div>
+          <div class="row">
+            <div class="label-block"><div class="l">NPC voice fragments</div><div class="h">Snippets you'll hear when switching pages. Can be disabled.</div></div>
+            <div class="control"><div class="toggle on"></div></div>
+          </div>
+        </div>
+
+        <div class="set-section">
+          <h2>Notifications</h2>
+          <div class="row">
+            <div class="label-block"><div class="l">Broadcast alerts</div><div class="h">Desktop notification when a new Refuge broadcast arrives.</div></div>
+            <div class="control"><div class="toggle on"></div></div>
+          </div>
+          <div class="row">
+            <div class="label-block"><div class="l">Event reminders</div><div class="h">Heads-up 30 minutes before scheduled field events.</div></div>
+            <div class="control"><div class="toggle on"></div></div>
+          </div>
+          <div class="row">
+            <div class="label-block"><div class="l">Friend connects</div><div class="h">Toast when someone from your social list comes online.</div></div>
+            <div class="control"><div class="toggle"></div></div>
+          </div>
+          <div class="row">
+            <div class="label-block"><div class="l">Store offers</div><div class="h">Occasional notes about sponsor sales or new packs. Limited to one per fortnight.</div></div>
+            <div class="control"><div class="toggle"></div></div>
+          </div>
+        </div>
+
+        <div class="set-section">
+          <h2>Display</h2>
+          <div class="row">
+            <div class="label-block"><div class="l">Launcher language</div><div class="h">In-game language is set separately, in Reforger options.</div></div>
+            <div class="control"><select class="select-input"><option>English (UK)</option><option>English (US)</option><option>Russian</option></select></div>
+          </div>
+          <div class="row">
+            <div class="label-block"><div class="l">Reduce motion</div><div class="h">Disables non-essential animations and transitions.</div></div>
+            <div class="control"><div class="toggle"></div></div>
+          </div>
+          <div class="row">
+            <div class="label-block"><div class="l">Discord Rich Presence</div><div class="h">Shows your current region and survivor on your Discord profile.</div></div>
+            <div class="control"><div class="toggle on"></div></div>
+          </div>
+        </div>
+
+        <div class="set-section">
+          <h2>About &amp; diagnostics</h2>
+          <p style="font-size: 12px; color: var(--frost-500); line-height: 1.6; margin-bottom: 18px;">For bug reports and support tickets, copy this block and paste it with your message. It contains no personal data beyond your Steam ID.</p>
+
+          <div style="border: 1px solid var(--void-50); background: rgba(15, 27, 38, 0.4); padding: 18px 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.7; color: var(--frost-200); margin-bottom: 14px; position: relative;">
+            <button style="position: absolute; top: 12px; right: 12px; padding: 5px 12px; font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; border: 1px solid var(--frost-700); background: transparent; color: var(--frost-300); cursor: pointer; font-family: inherit;">
+              Copy
+            </button>
+            <div><span style="color: var(--frost-700);">launcher:</span>     1.4.2 <span style="color: var(--frost-500);">(build a8f37b)</span></div>
+            <div><span style="color: var(--frost-700);">mod:</span>          1.4.2 <span style="color: var(--frost-500);">(verified)</span></div>
+            <div><span style="color: var(--frost-700);">core:</span>         1.4.2 <span style="color: var(--frost-500);">(eu-1)</span></div>
+            <div><span style="color: var(--frost-700);">reforger:</span>     1.7.0.42</div>
+            <div><span style="color: var(--frost-700);">os:</span>           Windows 11 Pro 24H2 (build 26100)</div>
+            <div><span style="color: var(--frost-700);">cpu:</span>          AMD Ryzen 7 7800X3D</div>
+            <div><span style="color: var(--frost-700);">gpu:</span>          NVIDIA RTX 4080 (566.36)</div>
+            <div><span style="color: var(--frost-700);">ram:</span>          32 GB</div>
+            <div><span style="color: var(--frost-700);">steam_id:</span>     76561198XXXXX</div>
+            <div><span style="color: var(--frost-700);">endpoint:</span>     core.checkpointk.example</div>
+            <div><span style="color: var(--frost-700);">last_connect:</span> 2026-06-01 08:14:22 UTC</div>
+            <div><span style="color: var(--frost-700);">session_id:</span>   A8F-37B-9D2E</div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
+            <div style="border: 1px solid var(--void-50); background: rgba(10, 14, 19, 0.4); padding: 14px 16px;">
+              <div style="font-size: 11px; color: var(--frost-500); letter-spacing: 0.08em; margin-bottom: 6px;">UPDATE STATUS</div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--frost-100); margin-bottom: 8px;">
+                <span style="width: 8px; height: 8px; background: var(--arc-500); border-radius: 50%;"></span>
+                Up to date
+              </div>
+              <div style="font-size: 11px; color: var(--frost-700); margin-bottom: 12px;">Last checked 4 min ago. Auto-checks every 15 minutes.</div>
+              <button class="btn" style="padding: 7px 14px; font-size: 11px; width: 100%;">Check for updates</button>
+            </div>
+
+            <div style="border: 1px solid var(--void-50); background: rgba(10, 14, 19, 0.4); padding: 14px 16px;">
+              <div style="font-size: 11px; color: var(--frost-500); letter-spacing: 0.08em; margin-bottom: 6px;">UPDATE CHANNEL</div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--frost-100); margin-bottom: 8px;">
+                <span style="width: 8px; height: 8px; background: var(--frost-500); border-radius: 50%;"></span>
+                Stable
+              </div>
+              <div style="font-size: 11px; color: var(--frost-700); margin-bottom: 12px;">Stable, beta, and experimental channels available.</div>
+              <select class="select-input" style="width: 100%; padding: 6px 10px; font-size: 11px;">
+                <option>Stable (recommended)</option>
+                <option>Beta — preview features</option>
+                <option>Experimental — for testers</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="font-size: 12px; color: var(--frost-500); line-height: 1.8;">
+            <div><a href="#" style="color: var(--frost-300); text-decoration: none;">View changelog</a> &middot; <a href="#" style="color: var(--frost-300); text-decoration: none;">Report a bug</a> &middot; <a href="#" style="color: var(--frost-300); text-decoration: none;">Open logs folder</a></div>
+            <div style="margin-top: 12px;"><a href="#" style="color: var(--frost-500);">EULA</a> &middot; <a href="#" style="color: var(--frost-500);">Privacy</a> &middot; <a href="#" style="color: var(--frost-500);">Refund policy</a> &middot; <a href="#" style="color: var(--frost-500);">Drop odds methodology</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

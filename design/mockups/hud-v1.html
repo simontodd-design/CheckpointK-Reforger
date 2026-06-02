@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CK HUD &mdash; v1 mockup</title>
+<style>
+  :root {
+    --void-900: #000000;
+    --void-100: #141B22;
+    --void-50:  #1A2129;
+    --frost-50:  #F4FAFC;
+    --frost-200: #B9DEEB;
+    --frost-300: #9DD0E8;
+    --frost-500: #5FA0BC;
+    --frost-700: #2E5B72;
+    --frost-800: #1E3D4F;
+    --arc-500:   #4FCFDF;
+    --ember-300: #F2C56B;
+    --ember-500: #D89A2E;
+    --blood-300: #C97B70;
+    --blood-500: #8E382C;
+  }
+  body { margin: 0; padding: 24px; background: #050505; color: var(--frost-50); font-family: 'Inter', system-ui, sans-serif; }
+  h1 { font-family: 'Cinzel', Georgia, serif; font-weight: 500; letter-spacing: 0.04em; color: var(--frost-200); font-size: 18px; text-transform: uppercase; }
+  .ck-stage { background: #000; border: 1px solid var(--void-50); padding: 0; margin: 0 0 24px; overflow: hidden; position: relative; max-width: 1280px; }
+  .ck-stage.hud { aspect-ratio: 16/9; background: radial-gradient(ellipse at 30% 60%, #142838 0%, #05080B 60%, #000000 100%); }
+  .ck-stage.window { padding: 2rem; min-height: 360px; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 50%, #0F1B26 0%, #000000 80%); }
+  .ck-stage.window-tight { padding: 1.5rem; min-height: 260px; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 50%, #0F1B26 0%, #000000 80%); }
+  .ck-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--frost-500); font-weight: 500; }
+  .ck-stage-label { position: absolute; top: 12px; right: 14px; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--frost-700); font-weight: 500; z-index: 10; }
+  .ck-display { font-family: 'Cinzel', 'Spectral SC', Georgia, serif; letter-spacing: 0.04em; }
+  .ck-mono { font-family: 'JetBrains Mono', 'Cascadia Code', monospace; }
+  .ck-bar { position: relative; background: var(--void-100); overflow: hidden; }
+  .ck-bar > div { height: 100%; }
+  .ck-btn { padding: 10px 18px; font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid var(--frost-700); background: transparent; color: var(--frost-200); cursor: pointer; font-family: inherit; }
+  .ck-btn:hover { border-color: var(--frost-500); color: var(--frost-50); }
+  .ck-btn-primary { border-color: var(--frost-300); color: var(--frost-50); background: rgba(157, 208, 232, 0.08); }
+  .ck-btn-danger { border-color: var(--blood-500); color: var(--blood-300); }
+  .ck-card { background: rgba(10, 14, 19, 0.85); border: 1px solid var(--frost-800); padding: 24px 28px; backdrop-filter: blur(8px); }
+</style>
+</head>
+<body>
+<h1>CK HUD &mdash; v1 mockup</h1>
+<p style="color: var(--frost-500); max-width: 720px; font-size: 13px; line-height: 1.6;">Reference for Phase 6 UI build. All bars and indicators map to native Reforger widgets (ProgressBarWidget, TextWidget, ImageWidget, PanelWidget). Authoring in Workbench Layout Editor.</p>
+
+<!-- HUD MOCKUP -->
+<div class="ck-stage hud">
+  <span class="ck-stage-label">In-game HUD</span>
+
+  <!-- Top-left -->
+  <div style="position: absolute; top: 28px; left: 28px; width: 300px;">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D89A2E" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span class="ck-display" style="font-size: 17px; font-weight: 500; color: var(--frost-50);">Marko Petrov</span>
+    </div>
+    <div style="margin-bottom: 6px;"><div class="ck-bar" style="height: 6px;"><div style="width: 78%; background: var(--frost-300);"></div></div></div>
+    <div style="margin-bottom: 14px;"><div class="ck-bar" style="height: 4px;"><div style="width: 54%; background: var(--arc-500);"></div></div></div>
+    <div class="ck-mono" style="font-size: 13px; color: var(--ember-500); margin-bottom: 20px;">◆ 1,247 scrip</div>
+
+    <div class="ck-label" style="margin-bottom: 10px;">Crew &mdash; 3 in field</div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 10px; font-size: 13px;">
+        <span style="flex: 0 0 70px;">Yelena</span>
+        <div class="ck-bar" style="flex: 1; height: 3px;"><div style="width: 92%; background: var(--frost-300);"></div></div>
+        <span class="ck-mono" style="font-size: 11px; color: var(--frost-500); flex: 0 0 36px; text-align: right;">12m</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; font-size: 13px;">
+        <span style="flex: 0 0 70px;">Stepan</span>
+        <div class="ck-bar" style="flex: 1; height: 3px;"><div style="width: 58%; background: var(--frost-300);"></div></div>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D89A2E" stroke-width="2"><path d="M14.5 2H8.5l-7 7v6l7 7h6l7-7v-6z"/></svg>
+        <span class="ck-mono" style="font-size: 11px; color: var(--frost-500); flex: 0 0 36px; text-align: right;">60m</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; font-size: 13px;">
+        <span style="flex: 0 0 70px; color: var(--blood-300);">Iva</span>
+        <div class="ck-bar" style="flex: 1; height: 3px;"><div style="width: 12%; background: var(--blood-500);"></div></div>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C97B70" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        <span class="ck-mono" style="font-size: 11px; color: var(--blood-300); flex: 0 0 36px; text-align: right;">down</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top-right -->
+  <div style="position: absolute; top: 28px; right: 28px; width: 260px; text-align: right;">
+    <div class="ck-label" style="margin-bottom: 6px;">Active &mdash; Vyshka prologue</div>
+    <div style="font-size: 14px; color: var(--frost-50); margin-bottom: 4px;">Find the Warden</div>
+    <div class="ck-mono" style="font-size: 11px; color: var(--frost-200);">→ Cross the southern field &mdash; 142m</div>
+  </div>
+
+  <!-- Bottom-right vitals -->
+  <div style="position: absolute; bottom: 28px; right: 28px; display: flex; flex-direction: column; gap: 7px; width: 200px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5FA0BC" stroke-width="2"><path d="M3 12s3-7 9-7 9 7 9 7-3 7-9 7-9-7-9-7z"/></svg>
+      <div class="ck-bar" style="flex: 1; height: 4px;"><div style="width: 71%; background: var(--frost-500);"></div></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5FA0BC" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+      <div class="ck-bar" style="flex: 1; height: 4px;"><div style="width: 44%; background: var(--frost-500);"></div></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4FCFDF" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4 4 0 1 0 5 0z"/></svg>
+      <div class="ck-bar" style="flex: 1; height: 4px;"><div style="width: 38%; background: var(--arc-500);"></div></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#8E382C" stroke="#8E382C" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+      <div class="ck-bar" style="flex: 1; height: 4px;"><div style="width: 22%; background: var(--blood-500);"></div></div>
+    </div>
+  </div>
+
+  <!-- Bottom-center prompt -->
+  <div style="position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.7); padding: 12px 22px; border: 1px solid var(--frost-700);">
+    <span class="ck-mono" style="font-size: 13px; font-weight: 500; padding: 3px 9px; border: 1px solid var(--frost-500);">F</span>
+    <span style="font-size: 14px;">Talk to the Warden</span>
+  </div>
+
+  <!-- Crosshair -->
+  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 3px; height: 3px; background: var(--frost-50); opacity: 0.5;"></div>
+</div>
+
+<p style="color: var(--frost-500); font-size: 12px;">Static reference. See <code>design/brand-bible.md</code> for the rules, <code>design/tokens/</code> for token sources.</p>
+</body>
+</html>

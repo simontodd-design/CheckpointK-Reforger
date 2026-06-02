@@ -1,0 +1,109 @@
+{
+  "$schema": "./_schema/colors.schema.json",
+  "_meta": {
+    "version": "0.1.0",
+    "notes": "Palette derived from the CK brand logo (cold cyan + pure black + electric ice). Frozen apocalypse / cosmic threat mood. Warm tones are accent only — Refuge lamp glow, danger, fire — never base."
+  },
+  "raw": {
+    "void-50":   "#1A2129",
+    "void-100":  "#141B22",
+    "void-300":  "#0A0E13",
+    "void-500":  "#05080B",
+    "void-700":  "#02030500",
+    "void-900":  "#000000",
+
+    "frost-50":  "#F4FAFC",
+    "frost-100": "#D8EDF4",
+    "frost-200": "#B9DEEB",
+    "frost-300": "#9DD0E8",
+    "frost-400": "#7DBCD5",
+    "frost-500": "#5FA0BC",
+    "frost-600": "#467F99",
+    "frost-700": "#2E5B72",
+    "frost-800": "#1E3D4F",
+    "frost-900": "#0F1B26",
+
+    "arc-100":   "#E8F8FB",
+    "arc-300":   "#9FE6F2",
+    "arc-500":   "#4FCFDF",
+    "arc-700":   "#1E8FA0",
+    "arc-900":   "#0B4854",
+
+    "steel-300": "#A4B5BD",
+    "steel-500": "#5F7480",
+    "steel-700": "#324049",
+
+    "ember-300": "#F2C56B",
+    "ember-500": "#D89A2E",
+    "ember-700": "#9C6A12",
+
+    "blood-300": "#C97B70",
+    "blood-500": "#8E382C",
+    "blood-700": "#561A10",
+
+    "bone-100":  "#E8E1D1",
+    "bone-300":  "#C9BFA5",
+    "bone-500":  "#8E8569",
+
+    "pure-white": "#FFFFFF",
+    "pure-black": "#000000"
+  },
+  "semantic": {
+    "brand": {
+      "primary":            "{raw.frost-300}",
+      "primaryHover":       "{raw.frost-100}",
+      "primaryActive":      "{raw.arc-500}",
+      "secondary":          "{raw.frost-500}",
+      "accent":             "{raw.arc-300}"
+    },
+    "surface": {
+      "base":               "{raw.void-900}",
+      "raised":             "{raw.void-300}",
+      "card":               "{raw.void-100}",
+      "input":              "{raw.void-50}",
+      "overlay":            "{raw.pure-black}",
+      "scrim":              "{raw.void-900}"
+    },
+    "text": {
+      "primary":            "{raw.frost-50}",
+      "secondary":          "{raw.frost-200}",
+      "muted":              "{raw.frost-500}",
+      "inverse":            "{raw.void-900}",
+      "accent":             "{raw.arc-300}",
+      "danger":             "{raw.blood-300}",
+      "warmth":             "{raw.ember-300}"
+    },
+    "border": {
+      "default":            "{raw.frost-800}",
+      "strong":             "{raw.frost-500}",
+      "subtle":             "{raw.void-50}",
+      "accent":             "{raw.arc-500}"
+    },
+    "state": {
+      "success":            "{raw.frost-300}",
+      "warning":            "{raw.ember-500}",
+      "danger":             "{raw.blood-500}",
+      "info":               "{raw.arc-500}"
+    },
+    "region": {
+      "arland":             "{raw.ember-500}",
+      "everon":             "{raw.frost-500}",
+      "kolguyev":           "{raw.arc-500}"
+    },
+    "logo": {
+      "background":         "{raw.void-900}",
+      "energyOuter":        "{raw.frost-800}",
+      "energyMid":          "{raw.frost-500}",
+      "energyInner":        "{raw.frost-200}",
+      "monogram":           "{raw.frost-50}",
+      "monogramHighlight":  "{raw.pure-white}"
+    }
+  },
+  "_principles": [
+    "Pure black is the base. No grey backgrounds. The world is dark.",
+    "Cyan/frost is the primary brand. Use it for headings, accents, links, active states.",
+    "Warm tones (ember, blood) are accent only. Ember = Refuge / lamp glow / human warmth. Blood = critical danger only.",
+    "Region accents inform but don't dominate — Arland's ember warmth is a *contrast* against the frozen base, not a replacement for it.",
+    "High contrast required for legibility against dark backgrounds. Body text minimum frost-200 (#B9DEEB), accent text minimum frost-300."
+  ]
+}

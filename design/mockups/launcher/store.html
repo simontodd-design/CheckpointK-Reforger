@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CK Launcher &mdash; Store</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .store-intro { color: var(--frost-500); font-size: 13px; line-height: 1.65; margin-bottom: 28px; max-width: 700px; font-style: italic; }
+
+  .section-h { display: flex; align-items: baseline; gap: 16px; margin: 36px 0 18px; }
+  .section-h h2 { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 500; color: var(--frost-50); letter-spacing: 0.06em; }
+  .section-h .sub { color: var(--frost-500); font-size: 12px; }
+
+  /* TIER CARDS */
+  .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 14px; }
+  .tier { border: 1px solid var(--void-50); background: rgba(10, 14, 19, 0.55); padding: 24px 24px 28px; display: flex; flex-direction: column; position: relative; }
+  .tier.bronze { border-color: #6F3D21; }
+  .tier.silver { border-color: #5F7480; border-width: 2px; transform: translateY(-6px); }
+  .tier.gold { border-color: var(--ember-500); }
+  .tier.silver::after { content: 'Most popular'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #000; padding: 3px 10px; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #A4B5BD; border: 1px solid #5F7480; }
+
+  .tier-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+  .tier-medal { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; flex: 0 0 36px; border: 1px solid; }
+  .tier.bronze .tier-medal { border-color: #6F3D21; color: #C99474; }
+  .tier.silver .tier-medal { border-color: #A4B5BD; color: #A4B5BD; }
+  .tier.gold .tier-medal { border-color: var(--ember-500); color: var(--ember-300); }
+  .tier-medal svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+
+  .tier-name { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 500; color: var(--frost-50); letter-spacing: 0.06em; }
+  .tier-term { font-size: 11px; letter-spacing: 0.10em; color: var(--frost-500); margin-bottom: 18px; text-transform: uppercase; }
+
+  .tier-price { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .tier-price .p { font-family: 'Cinzel', serif; font-size: 30px; color: var(--frost-50); line-height: 1; }
+  .tier.bronze .tier-price .p { color: #F0997B; }
+  .tier.silver .tier-price .p { color: #A4B5BD; }
+  .tier.gold .tier-price .p { color: var(--ember-300); }
+  .tier-price .per { font-size: 11px; color: var(--frost-500); }
+  .tier-savings { font-size: 11px; color: var(--arc-500); margin-bottom: 16px; letter-spacing: 0.06em; }
+  .tier-savings.empty { color: var(--void-50); }
+
+  .tier-divider { height: 1px; background: var(--void-50); margin: 6px 0 16px; }
+
+  .tier ul { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .tier li { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--frost-100); line-height: 1.4; }
+  .tier li i { font-size: 13px; flex: 0 0 13px; }
+  .tier.bronze li i { color: #C99474; }
+  .tier.silver li i { color: #A4B5BD; }
+  .tier.gold li i { color: var(--ember-300); }
+  .tier li.boost { color: var(--arc-300); font-weight: 500; }
+
+  .tier-cta { margin-top: auto; }
+  .tier .btn { width: 100%; }
+  .tier.silver .btn { border-color: #A4B5BD; color: var(--frost-50); background: rgba(164,181,189,0.06); }
+  .tier.gold .btn { border-color: var(--ember-500); color: var(--ember-300); }
+
+  /* BAGS */
+  .bags-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 22px; }
+  .bag { border: 1px solid var(--void-50); background: rgba(10, 14, 19, 0.5); display: flex; flex-direction: column; transition: border-color 150ms; }
+  .bag:hover { border-color: var(--frost-800); }
+
+  .bag .preview {
+    aspect-ratio: 16/10;
+    background: radial-gradient(ellipse at 50% 50%, var(--void-100) 0%, var(--void-900) 90%);
+    border-bottom: 1px solid var(--void-50);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .bag .preview .glyph { width: 64px; height: 64px; opacity: 0.85; }
+  .bag .preview .rarity-tag { position: absolute; top: 10px; right: 10px; padding: 3px 7px; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; background: rgba(0,0,0,0.85); }
+  .bag .preview .rarity-tag.common { color: var(--frost-500); border: 1px solid var(--frost-700); }
+  .bag .preview .rarity-tag.uncommon { color: var(--frost-300); border: 1px solid var(--frost-500); }
+  .bag .preview .rarity-tag.rare { color: var(--arc-500); border: 1px solid var(--arc-700); }
+  .bag .preview .rarity-tag.legendary { color: var(--ember-300); border: 1px solid var(--ember-500); }
+
+  .bag .body { padding: 16px 18px; flex: 1; display: flex; flex-direction: column; }
+  .bag .pname { font-family: 'Cinzel', serif; font-size: 16px; color: var(--frost-50); margin-bottom: 6px; letter-spacing: 0.04em; }
+  .bag .pdesc { font-size: 12px; color: var(--frost-500); line-height: 1.55; margin-bottom: 14px; }
+
+  .bag .odds { margin-bottom: 14px; }
+  .bag .odds-label { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--frost-700); margin-bottom: 8px; }
+  .bag .odds-bar { display: flex; height: 4px; gap: 1px; margin-bottom: 6px; }
+  .bag .odds-bar > div { height: 100%; }
+  .bag .odds-bar .o-common { background: var(--frost-700); }
+  .bag .odds-bar .o-uncommon { background: var(--frost-400); }
+  .bag .odds-bar .o-rare { background: var(--arc-500); }
+  .bag .odds-bar .o-legendary { background: var(--ember-500); }
+  .bag .odds-key { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 12px; font-size: 10px; }
+  .bag .odds-key .ok { display: flex; align-items: center; gap: 6px; color: var(--frost-200); }
+  .bag .odds-key .ok::before { content: ''; width: 6px; height: 6px; flex: 0 0 6px; }
+  .bag .odds-key .ok.common::before { background: var(--frost-700); }
+  .bag .odds-key .ok.uncommon::before { background: var(--frost-400); }
+  .bag .odds-key .ok.rare::before { background: var(--arc-500); }
+  .bag .odds-key .ok.legendary::before { background: var(--ember-500); }
+  .bag .odds-key .ok .pct { font-family: 'JetBrains Mono', monospace; color: var(--frost-100); margin-left: auto; }
+
+  .bag .pfoot { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid var(--void-50); }
+  .bag .pprice { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--frost-50); }
+  .bag .pprice .currency { color: var(--ember-500); margin-right: 4px; }
+  .bag .pcta { font-size: 11px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--frost-300); padding: 7px 14px; border: 1px solid var(--frost-700); cursor: pointer; background: transparent; font-family: inherit; }
+  .bag .pcta:hover { border-color: var(--frost-300); color: var(--frost-50); }
+  .bag .bundle { font-size: 11px; color: var(--frost-300); cursor: pointer; }
+  .bag .bundle:hover { color: var(--frost-50); }
+
+  .odds-notice {
+    border: 1px solid var(--void-50);
+    background: rgba(15, 27, 38, 0.4);
+    padding: 12px 18px;
+    margin-bottom: 28px;
+    font-size: 11px;
+    color: var(--frost-500);
+    line-height: 1.6;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .odds-notice svg { width: 16px; height: 16px; stroke: var(--frost-300); fill: none; flex: 0 0 16px; margin-top: 2px; }
+  .odds-notice strong { color: var(--frost-200); font-weight: 500; }
+
+  .cosmetics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+  .product { border: 1px solid var(--void-50); background: rgba(10, 14, 19, 0.5); display: flex; flex-direction: column; }
+  .product .preview { aspect-ratio: 16/10; background: radial-gradient(ellipse at 50% 50%, var(--void-100) 0%, var(--void-900) 90%); border-bottom: 1px solid var(--void-50); display: flex; align-items: center; justify-content: center; }
+  .product .preview .glyph { width: 48px; height: 48px; }
+  .product .body { padding: 16px 18px; flex: 1; }
+  .product .pname { font-family: 'Cinzel', serif; font-size: 15px; color: var(--frost-50); margin-bottom: 6px; letter-spacing: 0.04em; }
+  .product .pdesc { font-size: 12px; color: var(--frost-500); line-height: 1.55; margin-bottom: 14px; }
+  .product .pfoot { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--void-50); }
+  .product .pprice { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--frost-50); }
+  .product .pprice .currency { color: var(--ember-500); margin-right: 4px; }
+  .product .pcta { font-size: 11px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--frost-300); padding: 6px 12px; border: 1px solid var(--frost-700); cursor: pointer; background: transparent; font-family: inherit; }
+
+  .delivery-notice { border: 1px solid var(--arc-700); background: rgba(31, 143, 160, 0.05); padding: 14px 20px; display: flex; align-items: center; gap: 14px; margin: 26px 0; font-size: 12px; color: var(--frost-200); }
+  .delivery-notice svg { width: 18px; height: 18px; stroke: var(--arc-500); fill: none; flex: 0 0 18px; }
+  .delivery-notice strong { color: var(--frost-50); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail">
+    <div class="rail-logo">
+      <img src="../../CKlogo.png" alt="CK">
+      <div>
+        <span class="name">Checkpoint K</span>
+        <span class="sub">Refuge build 1.4.2</span>
+      </div>
+    </div>
+    <nav>
+      <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 10v11h6v-6h6v6h6V10L12 3z"/></svg><span>Refuge</span></a>
+      <a href="news.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="3"/></svg><span>Radio</span></a>
+      <a href="store.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 9h18l-2 11H5L3 9zm5 0V5a4 4 0 0 1 8 0v4"/></svg><span>Store</span></a>
+      <a href="profile.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 21v-2a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v2"/><circle cx="12" cy="7" r="4"/></svg><span>Field log</span></a>
+      <a href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="3"/></svg><span>Settings</span></a>
+    </nav>
+    <div class="rail-foot">
+      <div class="rail-user">
+        <div class="avatar">ST</div>
+        <div class="who">Simon T<span class="handle">@simontodd-design</span></div>
+      </div>
+      <div class="rail-versions">
+        <div class="v-row"><span class="k">Launcher</span><span class="v">v1.4.2</span></div>
+        <div class="v-row"><span class="k">Mod</span><span class="v">v1.4.2</span></div>
+        <div class="v-row"><span class="k">Core</span><span class="v">eu-1</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1>Store</h1>
+      <div class="meta"><span class="scrip">◆ 1,247 scrip</span></div>
+    </div>
+
+    <p class="store-intro">Sponsorship tiers and supply bags. Cosmetics never expire; subscription perks renew with your term.</p>
+
+    <!-- SUBSCRIPTION TIERS -->
+    <div class="section-h">
+      <h2>Refuge sponsorship</h2>
+      <span class="sub">Pick a term &mdash; longer commitment, bigger benefits.</span>
+    </div>
+
+    <div class="tiers">
+      <!-- BRONZE -->
+      <div class="tier bronze">
+        <div class="tier-head">
+          <div class="tier-medal">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9 11l3-3 3 3"/></svg>
+          </div>
+          <div>
+            <div class="tier-name">Bronze</div>
+            <div class="tier-term">1 month</div>
+          </div>
+        </div>
+
+        <div class="tier-price"><span class="p">£5</span><span class="per">/ month</span></div>
+        <div class="tier-savings empty">Renews monthly</div>
+        <div class="tier-divider"></div>
+
+        <ul>
+          <li class="boost"><i class="ti ti-trending-up" aria-hidden="true"></i>+5% XP gain</li>
+          <li class="boost"><i class="ti ti-coins" aria-hidden="true"></i>+5% scrip earned</li>
+          <li><i class="ti ti-user-plus" aria-hidden="true"></i>1 extra survivor slot (6 total)</li>
+          <li><i class="ti ti-clock" aria-hidden="true"></i>Body lifetime &mdash; 45 minutes</li>
+          <li><i class="ti ti-shield-check" aria-hidden="true"></i>Bronze sigil on nameplate</li>
+          <li><i class="ti ti-brand-discord" aria-hidden="true"></i>Discord role &mdash; Refuge sponsor</li>
+        </ul>
+
+        <div class="tier-cta"><button class="btn">Sponsor &mdash; £5/mo</button></div>
+      </div>
+
+      <!-- SILVER -->
+      <div class="tier silver">
+        <div class="tier-head">
+          <div class="tier-medal">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 9l4 13h12l4-13z"/></svg>
+          </div>
+          <div>
+            <div class="tier-name">Silver</div>
+            <div class="tier-term">6 months</div>
+          </div>
+        </div>
+
+        <div class="tier-price"><span class="p">£25</span><span class="per">total</span></div>
+        <div class="tier-savings">£4.17 / mo &mdash; save 17%</div>
+        <div class="tier-divider"></div>
+
+        <ul>
+          <li class="boost"><i class="ti ti-trending-up" aria-hidden="true"></i>+10% XP gain</li>
+          <li class="boost"><i class="ti ti-coins" aria-hidden="true"></i>+10% scrip earned</li>
+          <li class="boost"><i class="ti ti-package" aria-hidden="true"></i>+5% loot drop chance</li>
+          <li><i class="ti ti-user-plus" aria-hidden="true"></i>2 extra survivor slots (7 total)</li>
+          <li><i class="ti ti-clock" aria-hidden="true"></i>Body lifetime &mdash; 60 minutes</li>
+          <li><i class="ti ti-ladder" aria-hidden="true"></i>Priority queue when cluster is full</li>
+          <li><i class="ti ti-shield-check" aria-hidden="true"></i>Silver sigil on nameplate</li>
+          <li><i class="ti ti-gift" aria-hidden="true"></i>One free supply bag per month</li>
+        </ul>
+
+        <div class="tier-cta"><button class="btn">Sponsor &mdash; £25</button></div>
+      </div>
+
+      <!-- GOLD -->
+      <div class="tier gold">
+        <div class="tier-head">
+          <div class="tier-medal">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div>
+            <div class="tier-name">Gold</div>
+            <div class="tier-term">12 months</div>
+          </div>
+        </div>
+
+        <div class="tier-price"><span class="p">£48</span><span class="per">total</span></div>
+        <div class="tier-savings">£4.00 / mo &mdash; save 20%</div>
+        <div class="tier-divider"></div>
+
+        <ul>
+          <li class="boost"><i class="ti ti-trending-up" aria-hidden="true"></i>+15% XP gain</li>
+          <li class="boost"><i class="ti ti-coins" aria-hidden="true"></i>+15% scrip earned</li>
+          <li class="boost"><i class="ti ti-package" aria-hidden="true"></i>+10% loot drop chance</li>
+          <li class="boost"><i class="ti ti-flame" aria-hidden="true"></i>+10% crafting XP</li>
+          <li><i class="ti ti-user-plus" aria-hidden="true"></i>3 extra survivor slots (8 total)</li>
+          <li><i class="ti ti-clock" aria-hidden="true"></i>Body lifetime &mdash; 90 minutes</li>
+          <li><i class="ti ti-ladder" aria-hidden="true"></i>Top priority queue</li>
+          <li><i class="ti ti-shield-check" aria-hidden="true"></i>Gold sigil on nameplate</li>
+          <li><i class="ti ti-gift" aria-hidden="true"></i>Two free supply bags per month</li>
+          <li><i class="ti ti-jacket" aria-hidden="true"></i>Exclusive Gold cosmetic set</li>
+        </ul>
+
+        <div class="tier-cta"><button class="btn">Sponsor &mdash; £48</button></div>
+      </div>
+    </div>
+
+    <p style="font-size: 11px; color: var(--frost-700); margin-top: 12px; line-height: 1.55; max-width: 720px;">Boosts apply across all your survivors. Cancel any time &mdash; benefits run until the end of your paid term. <a href="#" style="color: var(--frost-500);">Read the full policy &rarr;</a></p>
+
+    <!-- SUPPLY BAGS -->
+    <div class="section-h">
+      <h2>Supply bags</h2>
+      <span class="sub">Themed kits with chance-based contents. Delivered to your next survivor.</span>
+    </div>
+
+    <div class="odds-notice">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+      <div><strong>Transparent odds.</strong> Every bag's contents are listed with exact drop percentages below. Open the bag in-game by interacting with the Quartermaster. You always receive one item from the listed pool &mdash; never nothing. Not available in Belgium.</div>
+    </div>
+
+    <div class="bags-grid">
+      <!-- AK BAG -->
+      <div class="bag">
+        <div class="preview">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="#5FA0BC" stroke-width="1.2">
+            <path d="M2 14h4l1-3h11l3 3v3h-5l-1 2H7l-1-2H2z"/>
+            <path d="M11 8v3M14 6v5M5 17l-2 4M17 19h3"/>
+            <rect x="6" y="11" width="2" height="3"/>
+          </svg>
+          <div class="rarity-tag uncommon">Soldier's bag</div>
+        </div>
+        <div class="body">
+          <div class="pname">AK bag</div>
+          <div class="pdesc">A duffel from a CDF supply line. Rifle parts, magazines, and the occasional treasure.</div>
+
+          <div class="odds">
+            <div class="odds-label">Drop chances</div>
+            <div class="odds-bar">
+              <div class="o-common" style="flex: 60;"></div>
+              <div class="o-uncommon" style="flex: 25;"></div>
+              <div class="o-rare" style="flex: 10;"></div>
+              <div class="o-legendary" style="flex: 5;"></div>
+            </div>
+            <div class="odds-key">
+              <div class="ok common">Common <span class="pct">60%</span></div>
+              <div class="ok uncommon">Uncommon <span class="pct">25%</span></div>
+              <div class="ok rare">Rare <span class="pct">10%</span></div>
+              <div class="ok legendary">Legendary <span class="pct">5%</span></div>
+            </div>
+          </div>
+
+          <div class="pfoot">
+            <div class="pprice"><span class="currency">£</span>2.99</div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <a href="#" class="bundle">Contents</a>
+              <button class="pcta">Buy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEDIC BAG -->
+      <div class="bag">
+        <div class="preview">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="#5FA0BC" stroke-width="1.2">
+            <rect x="3" y="7" width="18" height="14" rx="0"/>
+            <path d="M7 7V5a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v2"/>
+            <path d="M12 11v6M9 14h6"/>
+          </svg>
+          <div class="rarity-tag uncommon">Field medic</div>
+        </div>
+        <div class="body">
+          <div class="pname">Medic bag</div>
+          <div class="pdesc">Found in field hospitals. Bandages and morphine are guaranteed &mdash; the rest is luck.</div>
+
+          <div class="odds">
+            <div class="odds-label">Drop chances</div>
+            <div class="odds-bar">
+              <div class="o-common" style="flex: 55;"></div>
+              <div class="o-uncommon" style="flex: 28;"></div>
+              <div class="o-rare" style="flex: 12;"></div>
+              <div class="o-legendary" style="flex: 5;"></div>
+            </div>
+            <div class="odds-key">
+              <div class="ok common">Common <span class="pct">55%</span></div>
+              <div class="ok uncommon">Uncommon <span class="pct">28%</span></div>
+              <div class="ok rare">Rare <span class="pct">12%</span></div>
+              <div class="ok legendary">Legendary <span class="pct">5%</span></div>
+            </div>
+          </div>
+
+          <div class="pfoot">
+            <div class="pprice"><span class="currency">£</span>2.49</div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <a href="#" class="bundle">Contents</a>
+              <button class="pcta">Buy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MARKSMAN BAG -->
+      <div class="bag">
+        <div class="preview">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="#5FA0BC" stroke-width="1.2">
+            <circle cx="12" cy="12" r="9"/>
+            <circle cx="12" cy="12" r="5"/>
+            <circle cx="12" cy="12" r="1.5" fill="#5FA0BC"/>
+            <path d="M12 1v3M12 20v3M1 12h3M20 12h3"/>
+          </svg>
+          <div class="rarity-tag rare">Marksman case</div>
+        </div>
+        <div class="body">
+          <div class="pname">Marksman bag</div>
+          <div class="pdesc">A long case from a sniper's hide. Optics, suppressors, match ammo. Heavier odds on the good stuff.</div>
+
+          <div class="odds">
+            <div class="odds-label">Drop chances</div>
+            <div class="odds-bar">
+              <div class="o-common" style="flex: 35;"></div>
+              <div class="o-uncommon" style="flex: 40;"></div>
+              <div class="o-rare" style="flex: 18;"></div>
+              <div class="o-legendary" style="flex: 7;"></div>
+            </div>
+            <div class="odds-key">
+              <div class="ok common">Common <span class="pct">35%</span></div>
+              <div class="ok uncommon">Uncommon <span class="pct">40%</span></div>
+              <div class="ok rare">Rare <span class="pct">18%</span></div>
+              <div class="ok legendary">Legendary <span class="pct">7%</span></div>
+            </div>
+          </div>
+
+          <div class="pfoot">
+            <div class="pprice"><span class="currency">£</span>4.99</div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <a href="#" class="bundle">Contents</a>
+              <button class="pcta">Buy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COLD WEATHER -->
+      <div class="bag">
+        <div class="preview">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="#4FCFDF" stroke-width="1.2">
+            <path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/>
+            <circle cx="12" cy="12" r="2" fill="#4FCFDF"/>
+          </svg>
+          <div class="rarity-tag rare">Kolguyev kit</div>
+        </div>
+        <div class="body">
+          <div class="pname">Frostline bag</div>
+          <div class="pdesc">Cold-weather gear pulled from a Soviet supply depot. The cold kills before the wolves do.</div>
+
+          <div class="odds">
+            <div class="odds-label">Drop chances</div>
+            <div class="odds-bar">
+              <div class="o-common" style="flex: 40;"></div>
+              <div class="o-uncommon" style="flex: 35;"></div>
+              <div class="o-rare" style="flex: 18;"></div>
+              <div class="o-legendary" style="flex: 7;"></div>
+            </div>
+            <div class="odds-key">
+              <div class="ok common">Common <span class="pct">40%</span></div>
+              <div class="ok uncommon">Uncommon <span class="pct">35%</span></div>
+              <div class="ok rare">Rare <span class="pct">18%</span></div>
+              <div class="ok legendary">Legendary <span class="pct">7%</span></div>
+            </div>
+          </div>
+
+          <div class="pfoot">
+            <div class="pprice"><span class="currency">£</span>3.99</div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <a href="#" class="bundle">Contents</a>
+              <button class="pcta">Buy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRADER BAG -->
+      <div class="bag">
+        <div class="preview">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="#5FA0BC" stroke-width="1.2">
+            <path d="M3 8l9-5 9 5v9l-9 5-9-5z"/>
+            <path d="M3 8l9 5 9-5M12 13v9"/>
+          </svg>
+          <div class="rarity-tag uncommon">Trader chest</div>
+        </div>
+        <div class="body">
+          <div class="pname">Trader bag</div>
+          <div class="pdesc">Bayou Traders' general supply &mdash; food, tools, tradeable goods, sometimes a curio worth real money.</div>
+
+          <div class="odds">
+            <div class="odds-label">Drop chances</div>
+            <div class="odds-bar">
+              <div class="o-common" style="flex: 50;"></div>
+              <div class="o-uncommon" style="flex: 30;"></div>
+              <div class="o-rare" style="flex: 15;"></div>
+              <div class="o-legendary" style="flex: 5;"></div>
+            </div>
+            <div class="odds-key">
+              <div class="ok common">Common <span class="pct">50%</span></div>
+              <div class="ok uncommon">Uncommon <span class="pct">30%</span></div>
+              <div class="ok rare">Rare <span class="pct">15%</span></div>
+              <div class="ok legendary">Legendary <span class="pct">5%</span></div>
+            </div>
+          </div>
+
+          <div class="pfoot">
+            <div class="pprice"><span class="currency">£</span>1.99</div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <a href="#" class="bundle">Contents</a>
+              <button class="pcta">Buy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WARDEN BAG -->
+      <div class="bag">
+        <div class="preview">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="#D89A2E" stroke-width="1.2">
+            <path d="M12 2L4 6v6c0 6 4 10 8 12 4-2 8-6 8-12V6z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          <div class="rarity-tag legendary">Warden's seal</div>
+        </div>
+        <div class="body">
+          <div class="pname">Warden's bag</div>
+          <div class="pdesc">The Warden's own seal. Top-tier contents only. No commons. He doesn't waste effort on tat.</div>
+
+          <div class="odds">
+            <div class="odds-label">Drop chances</div>
+            <div class="odds-bar">
+              <div class="o-uncommon" style="flex: 25;"></div>
+              <div class="o-rare" style="flex: 55;"></div>
+              <div class="o-legendary" style="flex: 20;"></div>
+            </div>
+            <div class="odds-key">
+              <div class="ok common">Common <span class="pct">0%</span></div>
+              <div class="ok uncommon">Uncommon <span class="pct">25%</span></div>
+              <div class="ok rare">Rare <span class="pct">55%</span></div>
+              <div class="ok legendary">Legendary <span class="pct">20%</span></div>
+            </div>
+          </div>
+
+          <div class="pfoot">
+            <div class="pprice"><span class="currency">£</span>9.99</div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <a href="#" class="bundle">Contents</a>
+              <button class="pcta">Buy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COSMETICS -->
+    <div class="section-h">
+      <h2>Cosmetics</h2>
+      <span class="sub">Direct purchase &mdash; no chance, no surprise. Pure appearance.</span>
+    </div>
+
+    <div class="cosmetics-grid">
+      <div class="product">
+        <div class="preview">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="#9DD0E8" stroke-width="1"><path d="M4 22l4-4h8l4 4M6 11V8a6 6 0 0 1 12 0v3M4 11h16l-2 7H6z"/></svg>
+        </div>
+        <div class="body">
+          <div class="pname">Refuge greys</div>
+          <div class="pdesc">Faction-neutral grey field clothes. Cuts well in low light.</div>
+          <div class="pfoot">
+            <div class="pprice"><span class="currency">£</span>3.49</div>
+            <button class="pcta">Buy</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product">
+        <div class="preview">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="#9DD0E8" stroke-width="1"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>
+        </div>
+        <div class="body">
+          <div class="pname">Lazarus sigil tattoo</div>
+          <div class="pdesc">An old enclave mark. Many survivors carry one; few earn the right.</div>
+          <div class="pfoot">
+            <div class="pprice"><span class="currency">£</span>1.99</div>
+            <button class="pcta">Buy</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product">
+        <div class="preview">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="#9DD0E8" stroke-width="1"><path d="M3 14h18v-4a8 8 0 0 0-16 0v4zm0 0v6h18v-6"/></svg>
+        </div>
+        <div class="body">
+          <div class="pname">Field hood &mdash; black</div>
+          <div class="pdesc">Heavy oilcloth hood. Functional &mdash; rain off, recognition harder.</div>
+          <div class="pfoot">
+            <div class="pprice"><span class="currency">£</span>2.49</div>
+            <button class="pcta">Buy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="delivery-notice">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M16 11V7a4 4 0 0 0-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+      <div><strong>Pending delivery.</strong> 1 bag is waiting at the Quartermaster for Marko Petrov. Connect to claim. &nbsp; <a href="index.html" style="color: var(--arc-500); margin-left: 6px;">Return to Refuge &rarr;</a></div>
+    </div>
+
+    <p style="font-size: 11px; color: var(--frost-700); line-height: 1.6; max-width: 660px;">All purchases process via Stripe. Currency at checkout matches your billing country. Refund window 14 days &mdash; unused subscriptions and unopened bags only. Loot bag odds are server-verified and audited monthly. <a href="#" style="color: var(--frost-500);">Refund policy &middot; Drop odds methodology &middot; Privacy</a></p>
+  </main>
+</div>
+
+</body>
+</html>

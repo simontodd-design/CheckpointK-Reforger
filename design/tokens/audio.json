@@ -1,0 +1,34 @@
+{
+  "_meta": {
+    "version": "0.0.1-placeholder",
+    "notes": "Logical audio token assignments. Real audio files dropped into design/audio/ui/ and referenced by filename. Placeholder filenames — actual sound design happens with the freelance designer or in Phase 11."
+  },
+  "ui": {
+    "click":        "ui/click_soft_01.ogg",
+    "clickConfirm": "ui/click_confirm_01.ogg",
+    "clickDeny":    "ui/click_deny_01.ogg",
+    "hover":        "ui/hover_tick_01.ogg",
+    "pageOpen":     "ui/page_open_01.ogg",
+    "pageClose":    "ui/page_close_01.ogg",
+    "notification": "ui/notif_radio_01.ogg",
+    "error":        "ui/error_buzz_01.ogg",
+    "success":      "ui/success_chime_01.ogg",
+    "transferStart":"ui/transfer_begin_01.ogg",
+    "transferEnd":  "ui/transfer_arrive_01.ogg",
+    "death":        "ui/death_static_01.ogg",
+    "levelUp":      "ui/levelup_radio_01.ogg"
+  },
+  "ambient": {
+    "launcherDefault": "ambient/launcher_loop_static_01.ogg",
+    "launcherArland":  "ambient/launcher_loop_arland_01.ogg",
+    "launcherEveron":  "ambient/launcher_loop_everon_01.ogg",
+    "launcherKolguyev":"ambient/launcher_loop_kolguyev_01.ogg",
+    "loadingScreen":   "ambient/loading_loop_01.ogg"
+  },
+  "principles": [
+    "UI sounds are short (<300ms) and quiet — they accent action, never dominate.",
+    "Ambient loops are seamless (no perceptible loop point) and filtered (low-end heavy, no clear melodic content).",
+    "Voice fragments use the same NPC voice from in-game ElevenLabs Pro library.",
+    "Player can mute UI vs ambient vs voice independently in Settings."
+  ]
+}

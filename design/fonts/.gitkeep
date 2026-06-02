@@ -1,0 +1,3 @@
+# Placeholder. Licensed display + body + mono font files land here. Loaded
+# by the launcher / manager via @font-face. The font filenames map to the
+# fontFamily entries in tokens/typography.json (without the fallbacks).
