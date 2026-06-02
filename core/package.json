@@ -6,14 +6,14 @@
   "description": "CK Core — backend API, WebSocket gateway, jobs, admin",
   "main": "src/main.ts",
   "scripts": {
-    "dev": "bun --hot src/main.ts",
+    "dev": "bun --env-file=../.env.local --hot src/main.ts",
     "build": "bun build src/main.ts --outdir dist --target bun",
-    "start": "bun src/main.ts",
+    "start": "bun --env-file=../.env.local src/main.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "bun src/db/migrate.ts",
+    "db:migrate": "bun --env-file=../.env.local src/db/migrate.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

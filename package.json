@@ -23,6 +23,7 @@
     "lint:fix": "biome check --write .",
     "typecheck": "bun run --filter '*' typecheck",
     "test": "bun run --filter '*' test",
+    "db:generate": "bun run --filter @ck/core db:generate",
     "db:migrate": "bun run --filter @ck/core db:migrate",
     "db:studio": "bun run --filter @ck/core db:studio",
     "design:sync": "bun design/scripts/sync-mod-tokens.ts",

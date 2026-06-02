@@ -6,9 +6,9 @@
   "description": "Per-host process supervisor — spawns Reforger servers, tails logs, syncs mods, talks to CK Core over WS",
   "main": "src/main.ts",
   "scripts": {
-    "dev": "bun --hot src/main.ts",
+    "dev": "bun --env-file=../.env.local --hot src/main.ts",
     "build": "bun build src/main.ts --outdir dist --target bun --compile --outfile dist/ck-manager-agent",
-    "start": "bun src/main.ts",
+    "start": "bun --env-file=../.env.local src/main.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -16,6 +16,7 @@
     "ws": "^8.18.0",
     "execa": "^9.4.0",
     "pino": "^9.4.0",
+    "pino-pretty": "^11.2.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
