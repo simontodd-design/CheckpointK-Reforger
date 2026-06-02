@@ -4,6 +4,7 @@
   import { session } from '$lib/session.svelte';
 
   $effect(() => {
+    if (!session.isSignedIn) session.load();
     if (!session.isSignedIn) void goto('/login');
   });
 </script>

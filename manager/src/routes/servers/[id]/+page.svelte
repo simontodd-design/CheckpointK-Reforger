@@ -18,6 +18,7 @@
   const id = $derived(page.params.id);
 
   $effect(() => {
+    if (!session.isSignedIn) session.load();
     if (!session.isSignedIn) { void goto('/login'); return; }
     void load();
     const t = setInterval(() => void load(false), 5_000);

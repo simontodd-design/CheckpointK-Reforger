@@ -9,6 +9,9 @@
   let err = $state<string | null>(null);
 
   $effect(() => {
+    // Re-read from localStorage in case this page mounted before the
+    // session was hydrated. hooks.client.ts also does this at boot.
+    if (!session.isSignedIn) session.load();
     if (!session.isSignedIn) {
       void goto('/login');
       return;
@@ -29,9 +32,9 @@
       hosts = h;
     } catch (e) {
       err = e instanceof Error ? e.message : String(e);
-      if (err.startsWith('forbidden')) {
-        setTimeout(() => session.clear(), 100);
-      }
+      // No auto-clear: an auth error here doesn't necessarily mean the
+      // session is dead. The user can hit "Sign out" from the sidebar
+      // if needed, otherwise we keep them on the page with a clear error.
     } finally {
       loading = false;
     }

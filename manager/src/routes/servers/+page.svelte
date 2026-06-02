@@ -15,6 +15,7 @@
   let busy = $state<Record<string, boolean>>({});
 
   $effect(() => {
+    if (!session.isSignedIn) session.load();
     if (!session.isSignedIn) { void goto('/login'); return; }
     void load();
     const t = setInterval(() => void load(false), 8_000);
