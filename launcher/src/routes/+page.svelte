@@ -1,55 +1,11 @@
 <script lang="ts">
-  import { getVersion } from '@tauri-apps/api/app';
   import { openUrl } from '@tauri-apps/plugin-opener';
-  import {
-    getHealth,
-    initiateSteamAuth,
-    pollAuthStatus,
-    loadSession,
-    saveSession,
-    clearSession,
-    type HealthResponse,
-    type CkSession,
-  } from '$lib/api';
+  import { initiateSteamAuth, pollAuthStatus } from '$lib/api';
+  import { session } from '$lib/session.svelte';
 
-  let launcherVersion = $state('0.0.1');
-  let coreState = $state<'connecting' | 'ok' | 'down'>('connecting');
-  let coreInfo = $state<HealthResponse | null>(null);
-  let coreError = $state<string | null>(null);
-
-  let session = $state<CkSession | null>(null);
   let authState = $state<'idle' | 'waiting' | 'error'>('idle');
   let authError = $state<string | null>(null);
-  let authPollTimer: ReturnType<typeof setInterval> | null = null;
-
-  $effect(() => {
-    void getVersion()
-      .then((v) => (launcherVersion = v))
-      .catch(() => {});
-  });
-
-  $effect(() => {
-    session = loadSession();
-  });
-
-  $effect(() => {
-    void refreshHealth();
-    const interval = setInterval(() => void refreshHealth(), 30_000);
-    return () => clearInterval(interval);
-  });
-
-  async function refreshHealth() {
-    const result = await getHealth();
-    if (result.ok && result.data) {
-      coreState = 'ok';
-      coreInfo = result.data;
-      coreError = null;
-    } else {
-      coreState = 'down';
-      coreInfo = null;
-      coreError = result.error ?? 'unknown error';
-    }
-  }
+  let pollTimer: ReturnType<typeof setInterval> | null = null;
 
   async function signInWithSteam() {
     if (authState === 'waiting') return;
@@ -68,160 +24,133 @@
   function startPolling(state: string) {
     stopPolling();
     const start = Date.now();
-    const TIMEOUT_MS = 5 * 60 * 1000;
-    authPollTimer = setInterval(async () => {
-      if (Date.now() - start > TIMEOUT_MS) {
+    const TIMEOUT = 5 * 60 * 1000;
+    pollTimer = setInterval(async () => {
+      if (Date.now() - start > TIMEOUT) {
         stopPolling();
         authError = 'sign-in timed out — please try again';
         authState = 'error';
         return;
       }
-      const result = await pollAuthStatus(state);
-      if (result.status === 'ok') {
+      const r = await pollAuthStatus(state);
+      if (r.status === 'ok') {
         stopPolling();
-        const next: CkSession = {
-          token: result.token,
-          profile: result.profile,
-          signedInAt: Date.now(),
-        };
-        saveSession(next);
-        session = next;
+        session.set(r.token, r.profile);
         authState = 'idle';
-      } else if (result.status === 'error') {
+      } else if (r.status === 'error') {
         stopPolling();
-        authError = result.error;
+        authError = r.error;
         authState = 'error';
-      } else if (result.status === 'unknown') {
-        // session expired or never existed — bail
+      } else if (r.status === 'unknown') {
         stopPolling();
         authError = 'sign-in session expired';
         authState = 'error';
       }
-      // 'pending' → keep polling
     }, 1500);
   }
 
   function stopPolling() {
-    if (authPollTimer) {
-      clearInterval(authPollTimer);
-      authPollTimer = null;
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
     }
   }
 
-  function signOut() {
-    clearSession();
-    session = null;
-    authState = 'idle';
-    authError = null;
-  }
-
-  function cancelSignIn() {
+  function cancel() {
     stopPolling();
     authState = 'idle';
     authError = null;
   }
 </script>
 
-<main>
-  <div class="frame">
-    <img src="/CKlogo.png" alt="CK" class="logo" />
-
+{#if !session.isSignedIn}
+  <!-- Welcome screen -->
+  <div class="welcome">
+    <img src="/CKlogo.png" alt="CK" class="welcome-logo" />
     <h1 class="display">Checkpoint K</h1>
     <p class="tagline">The cold is the easy part.</p>
 
-    {#if session}
-      <div class="signed-in">
-        <img src={session.profile.avatarUrl} alt="" class="avatar" />
-        <div class="who-name">
-          Signed in as <strong>{session.profile.personaName}</strong>
-          <span class="who-id">{session.profile.steamId}</span>
-        </div>
-        <div class="actions">
-          <button class="cta" type="button" disabled>Choose character</button>
-          <button class="ghost" type="button" onclick={signOut}>Sign out</button>
-        </div>
-      </div>
-    {:else if authState === 'waiting'}
+    {#if authState === 'waiting'}
       <div class="waiting">
         <div class="spinner" aria-hidden="true"></div>
         <p class="waiting-text">Waiting for Steam&hellip;</p>
         <p class="waiting-sub">Complete the sign-in in your browser.</p>
-        <button class="ghost" type="button" onclick={cancelSignIn}>Cancel</button>
+        <button class="ghost" type="button" onclick={cancel}>Cancel</button>
       </div>
     {:else}
-      <div class="actions">
-        <button
-          class="cta"
-          type="button"
-          disabled={coreState !== 'ok'}
-          onclick={signInWithSteam}
-        >
+      <div class="welcome-actions">
+        <button class="cta" type="button" onclick={signInWithSteam}>
           Sign in with Steam
         </button>
-        <button class="ghost" type="button">Continue without account</button>
+        <button class="ghost" type="button" disabled>Continue without account</button>
       </div>
       {#if authError}
         <p class="error">{authError}</p>
       {/if}
     {/if}
+  </div>
+{:else}
+  <!-- Signed-in dashboard -->
+  <div class="dashboard">
+    <header class="dash-header">
+      <p class="eyebrow">Briefing</p>
+      <h1 class="display">Welcome back, {session.profile?.personaName}.</h1>
+      <p class="tagline">The cold is the easy part.</p>
+    </header>
 
-    <div class="footer">
-      <span class="version">Launcher v{launcherVersion}</span>
-      <span class="dot">·</span>
-      <span class="version">Mod &mdash;</span>
-      <span class="dot">·</span>
+    <div class="grid">
+      <a href="/play" class="card hero">
+        <span class="card-eyebrow">Continue</span>
+        <h2 class="card-title">Take the airlock</h2>
+        <p class="card-body">
+          Pick a character. Pick a map. Boots on the ground in under a minute.
+        </p>
+        <span class="card-cta">Enter foyer &rarr;</span>
+      </a>
 
-      {#if coreState === 'connecting'}
-        <span class="version connecting">Core connecting&hellip;</span>
-      {:else if coreState === 'ok' && coreInfo}
-        <span class="version ok">
-          <span class="indicator" aria-hidden="true"></span>
-          Core v{coreInfo.version}
-        </span>
-      {:else}
-        <span class="version down" title={coreError ?? ''}>
-          <span class="indicator" aria-hidden="true"></span>
-          Core unreachable
-        </span>
-      {/if}
+      <a href="/news" class="card">
+        <span class="card-eyebrow">Latest</span>
+        <h3 class="card-subtitle">News &amp; patches</h3>
+        <p class="card-body">Read what changed since last drop.</p>
+      </a>
+
+      <a href="/store" class="card">
+        <span class="card-eyebrow">Store</span>
+        <h3 class="card-subtitle">Subscriptions &amp; bags</h3>
+        <p class="card-body">Bronze, Silver, Gold &mdash; or roll a supply bag.</p>
+      </a>
+
+      <a href="/profile" class="card">
+        <span class="card-eyebrow">Profile</span>
+        <h3 class="card-subtitle">Your record</h3>
+        <p class="card-body">Stats, achievements, kill log.</p>
+      </a>
+
+      <a href="/settings" class="card">
+        <span class="card-eyebrow">Config</span>
+        <h3 class="card-subtitle">Settings</h3>
+        <p class="card-body">Audio, video, controls, account.</p>
+      </a>
     </div>
   </div>
-</main>
+{/if}
 
 <style>
-  :global(body) {
-    margin: 0;
-    background: #000000;
-    color: #f4fafc;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    overflow: hidden;
-  }
-
-  main {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: radial-gradient(ellipse at 50% 40%, #0f1b26 0%, #05080b 60%, #000000 100%);
-    padding: 32px;
-  }
-
-  .frame {
+  /* welcome (signed out) */
+  .welcome {
     text-align: center;
     max-width: 480px;
+    padding: 32px;
   }
-
-  .logo {
+  .welcome-logo {
     width: 220px;
     height: 220px;
     object-fit: contain;
     margin-bottom: 24px;
     opacity: 0.95;
   }
-
   .display {
-    font-family: 'Cinzel', 'Spectral SC', Georgia, serif;
+    font-family: 'Cinzel', Georgia, serif;
     font-size: 40px;
     font-weight: 500;
     letter-spacing: 0.06em;
@@ -229,7 +158,6 @@
     margin: 0 0 10px;
     line-height: 1;
   }
-
   .tagline {
     font-size: 14px;
     color: #5fa0bc;
@@ -238,12 +166,12 @@
     margin: 0 0 40px;
   }
 
-  .actions {
+  .welcome-actions {
     display: flex;
     flex-direction: column;
     gap: 10px;
     max-width: 280px;
-    margin: 0 auto 56px;
+    margin: 0 auto;
   }
 
   .cta,
@@ -259,7 +187,6 @@
     cursor: pointer;
     transition: all 120ms ease-out;
   }
-
   .cta {
     border-color: #9dd0e8;
     color: #f4fafc;
@@ -269,84 +196,30 @@
     border-color: #4fcfdf;
     background: rgba(79, 207, 223, 0.12);
   }
-  .cta:disabled {
-    border-color: #1e3d4f;
-    color: #5fa0bc;
-    background: transparent;
-    cursor: not-allowed;
-  }
-
+  .cta:disabled { border-color: #1e3d4f; color: #5fa0bc; cursor: not-allowed; }
   .ghost {
     border-color: #2e5b72;
     color: #b9deeb;
   }
-  .ghost:hover {
-    border-color: #5fa0bc;
-    color: #f4fafc;
-  }
+  .ghost:hover:not(:disabled) { border-color: #5fa0bc; color: #f4fafc; }
+  .ghost:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* signed-in */
-  .signed-in {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 56px;
-  }
-  .avatar {
-    width: 72px;
-    height: 72px;
-    border: 1px solid #2e5b72;
-    margin-bottom: 14px;
-  }
-  .who-name {
-    font-size: 13px;
-    color: #b9deeb;
-    margin-bottom: 24px;
-  }
-  .who-name strong {
-    color: #f4fafc;
-    font-weight: 600;
-  }
-  .who-id {
-    display: block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: #5fa0bc;
-    margin-top: 4px;
-    letter-spacing: 0.05em;
-  }
-
-  /* waiting */
   .waiting {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 56px;
   }
   .spinner {
     width: 32px;
     height: 32px;
     border: 2px solid #1e3d4f;
     border-top-color: #4fcfdf;
-    border-radius: 0;
     animation: spin 1s linear infinite;
     margin-bottom: 18px;
   }
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  .waiting-text {
-    font-size: 13px;
-    color: #f4fafc;
-    margin: 0 0 4px;
-    letter-spacing: 0.04em;
-  }
-  .waiting-sub {
-    font-size: 11px;
-    color: #5fa0bc;
-    font-style: italic;
-    margin: 0 0 24px;
-  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .waiting-text { font-size: 13px; color: #f4fafc; margin: 0 0 4px; letter-spacing: 0.04em; }
+  .waiting-sub { font-size: 11px; color: #5fa0bc; font-style: italic; margin: 0 0 24px; }
 
   .error {
     font-family: 'JetBrains Mono', monospace;
@@ -356,45 +229,83 @@
     letter-spacing: 0.04em;
   }
 
-  .footer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+  /* dashboard */
+  .dashboard {
+    padding: 48px 56px;
+    max-width: 1120px;
+  }
+  .dash-header { margin-bottom: 40px; }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
-    letter-spacing: 0.10em;
-    color: #2e5b72;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #4fcfdf;
+    margin: 0 0 12px;
   }
+  .dash-header .display { font-size: 32px; margin: 0 0 8px; }
+  .dash-header .tagline { font-size: 13px; margin: 0; }
 
-  .dot {
-    color: #1e3d4f;
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
   }
-
-  .version {
-    color: #5fa0bc;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+  .card {
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    border: 1px solid #1e3d4f;
+    background: rgba(10, 14, 19, 0.4);
+    text-decoration: none;
+    color: inherit;
+    transition: all 160ms ease-out;
   }
-
-  .indicator {
-    width: 6px;
-    height: 6px;
-    display: inline-block;
+  .card:hover {
+    border-color: #4fcfdf;
+    background: rgba(79, 207, 223, 0.06);
+    transform: translateY(-1px);
   }
-
-  .ok .indicator {
-    background: #4fcfdf;
+  .card.hero {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(79, 207, 223, 0.08) 0%, rgba(10, 14, 19, 0.4) 100%);
+    border-color: #2e5b72;
+    min-height: 180px;
+    justify-content: center;
   }
-  .down .indicator {
-    background: #8e382c;
+  .card-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #4fcfdf;
+    margin-bottom: 8px;
   }
-  .down {
-    color: #c97b70;
+  .card-title {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    margin: 0 0 12px;
+    color: #f4fafc;
   }
-  .connecting {
-    color: #5fa0bc;
-    opacity: 0.7;
+  .card-subtitle {
+    font-size: 16px;
+    margin: 0 0 10px;
+    color: #f4fafc;
+    font-weight: 500;
+  }
+  .card-body {
+    font-size: 13px;
+    color: #b9deeb;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .card-cta {
+    margin-top: 16px;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #4fcfdf;
   }
 </style>

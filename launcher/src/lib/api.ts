@@ -113,3 +113,69 @@ export function saveSession(session: CkSession): void {
 export function clearSession(): void {
   localStorage.removeItem(SESSION_KEY);
 }
+
+// ── Authed fetch ─────────────────────────────────────────────────────
+
+async function authedFetch(path: string, token: string | null): Promise<Response> {
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return fetch(`${coreUrl}${path}`, { headers, signal: AbortSignal.timeout(5000) });
+}
+
+// ── Characters ───────────────────────────────────────────────────────
+
+export interface Character {
+  id: string;
+  name: string;
+  level: number;
+  mapId: string;
+  mapName: string;
+  alive: boolean;
+  lastPlayed: string;
+  hours: number;
+}
+
+export async function listCharacters(token: string | null): Promise<Character[]> {
+  const res = await authedFetch('/characters', token);
+  if (!res.ok) throw new Error(`characters HTTP ${res.status}`);
+  const data = (await res.json()) as { characters: Character[] };
+  return data.characters;
+}
+
+// ── Maps ─────────────────────────────────────────────────────────────
+
+export interface MapInfo {
+  id: string;
+  name: string;
+  area: string;
+  description: string;
+  difficulty: 'low' | 'medium' | 'high';
+  players: number;
+  capacity: number;
+  status: 'online' | 'offline' | 'maintenance';
+  unlocked: boolean;
+}
+
+export async function listMaps(token: string | null): Promise<MapInfo[]> {
+  const res = await authedFetch('/maps', token);
+  if (!res.ok) throw new Error(`maps HTTP ${res.status}`);
+  const data = (await res.json()) as { maps: MapInfo[] };
+  return data.maps;
+}
+
+// ── News ─────────────────────────────────────────────────────────────
+
+export interface NewsItem {
+  id: string;
+  title: string;
+  body: string;
+  tag: 'patch' | 'event' | 'announcement' | 'devlog';
+  publishedAt: string;
+}
+
+export async function listNews(): Promise<NewsItem[]> {
+  const res = await authedFetch('/news', null);
+  if (!res.ok) throw new Error(`news HTTP ${res.status}`);
+  const data = (await res.json()) as { items: NewsItem[] };
+  return data.items;
+}

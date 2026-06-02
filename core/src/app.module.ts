@@ -11,7 +11,10 @@ import { LoggerModule } from 'nestjs-pino';
 
 import { AgentsModule } from './modules/agents/agents.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { CharactersModule } from './modules/characters/characters.module';
 import { HealthModule } from './modules/health/health.module';
+import { MapsModule } from './modules/maps/maps.module';
+import { NewsModule } from './modules/news/news.module';
 
 @Module({
   imports: [
@@ -27,6 +30,9 @@ import { HealthModule } from './modules/health/health.module';
     HealthModule,
     AgentsModule,
     AuthModule,
+    CharactersModule,
+    MapsModule,
+    NewsModule,
   ],
 })
 export class AppModule {}
