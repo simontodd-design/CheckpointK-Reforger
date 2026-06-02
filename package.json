@@ -29,7 +29,7 @@
     "design:check": "bun design/scripts/sync-mod-tokens.ts --dry-run --strict"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.0",
+    "@biomejs/biome": "^2.4.16",
     "@types/bun": "^1.1.0",
     "typescript": "^5.5.0"
   },
