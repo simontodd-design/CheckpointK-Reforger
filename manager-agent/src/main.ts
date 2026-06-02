@@ -1,10 +1,15 @@
 /**
  * ck-manager-agent — per-host supervisor.
  *
- * Phase 0 scope: connect to CK Core, log "hello". No process spawning yet.
- * Phase 1 implements: spawn / kill / restart / tail / steamcmd / modio sync.
+ * Phase 0: connect to CK Core, log handshake.
+ * Phase 1: handle spawn / kill / restart / tail / steamcmd / modio sync
+ *          commands from CK Manager UI (via CK Core relay).
+ *
+ * Uses raw ws (not socket.io) — CK Core's gateway is built on
+ * @nestjs/platform-ws for Bun compatibility.
+ * Protocol: JSON messages of the form { event: 'name', data: {...} }
  */
-import { WebSocket } from 'ws';
+import WebSocket from 'ws';
 import pino from 'pino';
 
 const log = pino({
@@ -18,9 +23,11 @@ const log = pino({
 const CORE_WS_URL = process.env.CORE_WS_URL ?? 'ws://localhost:3001/agents';
 const AGENT_TOKEN = process.env.AGENT_TOKEN ?? '';
 const AGENT_HOST_ID = process.env.AGENT_HOST_ID ?? 'local-dev';
+const VERSION = '0.0.1';
+const RECONNECT_DELAY_MS = 5000;
 
 if (!AGENT_TOKEN) {
-  log.warn('AGENT_TOKEN not set — agent will not authenticate to CK Core');
+  log.warn('AGENT_TOKEN not set — CK Core will accept the connection if its own AGENT_TOKEN is also unset (dev only)');
 }
 
 function connect() {
@@ -35,21 +42,34 @@ function connect() {
 
   ws.on('open', () => {
     log.info('connected to CK Core');
-    ws.send(JSON.stringify({ type: 'hello', hostId: AGENT_HOST_ID, version: '0.0.1' }));
+    ws.send(JSON.stringify({
+      event: 'hello',
+      data: { hostId: AGENT_HOST_ID, version: VERSION },
+    }));
   });
 
   ws.on('message', (raw) => {
-    log.info({ raw: raw.toString() }, 'received from CK Core');
-    // Phase 1: handle spawn/kill/restart/tail/steamcmd-update/modio-sync
+    try {
+      const msg = JSON.parse(raw.toString()) as { event: string; data: unknown };
+      switch (msg.event) {
+        case 'hello-ack':
+          log.info({ data: msg.data }, 'hello ack received');
+          break;
+        default:
+          log.info({ event: msg.event, data: msg.data }, 'message received');
+      }
+    } catch (err) {
+      log.error({ err: String(err), raw: raw.toString() }, 'failed to parse message');
+    }
   });
 
-  ws.on('close', (code) => {
-    log.warn({ code }, 'connection closed — reconnecting in 5s');
-    setTimeout(connect, 5000);
+  ws.on('close', (code, reason) => {
+    log.warn({ code, reason: reason.toString() }, `connection closed — reconnecting in ${RECONNECT_DELAY_MS / 1000}s`);
+    setTimeout(connect, RECONNECT_DELAY_MS);
   });
 
   ws.on('error', (err) => {
-    log.error({ err }, 'websocket error');
+    log.error({ err: err.message }, 'websocket error');
   });
 }
 
