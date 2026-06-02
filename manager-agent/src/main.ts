@@ -22,6 +22,7 @@ import {
   type ReforgerProcess,
   type InstallStatus,
 } from './reforger-server';
+import { collectStatus } from './host-status';
 
 const log = pino({
   level: process.env.LOG_LEVEL ?? 'info',
@@ -283,6 +284,8 @@ function connect(): void {
       event: 'hello',
       data: { hostId: AGENT_HOST_ID, version: VERSION },
     }));
+    // Send first status immediately so the Manager doesn't see "—" for 10s.
+    void emitStatus();
   });
 
   ws.on('message', (raw) => {
@@ -322,6 +325,25 @@ function connect(): void {
     log.error({ err: err.message }, 'websocket error');
   });
 }
+
+async function emitStatus(): Promise<void> {
+  try {
+    const status = await collectStatus({
+      hostId: AGENT_HOST_ID,
+      agentVersion: VERSION,
+      reforgerServerPath: install.kind === 'real' ? install.rootDir : null,
+      reforgerServerExe: install.kind === 'real' ? install.exePath : null,
+    });
+    send('host:status', status);
+  } catch (err) {
+    log.warn({ err: String(err) }, 'host:status collect failed');
+  }
+}
+
+// Heartbeat status push every 10s. Manager UI's Hosts page reads these
+// snapshots — gives the operator live CPU/RAM/disk plus install state
+// for each host without ever needing to RDP.
+setInterval(() => void emitStatus(), 10_000);
 
 connect();
 

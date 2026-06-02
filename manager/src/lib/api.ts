@@ -173,14 +173,38 @@ export async function restartServer(token: string, id: string): Promise<CkServer
 
 // ── hosts ────────────────────────────────────────────────────────────
 
+export interface HostStatus {
+  hostId: string;
+  agentVersion: string;
+  ts: number;
+  osInfo: { platform: string; release: string; hostname: string; arch: string };
+  metrics: {
+    cpuPct: number;
+    memTotalMB: number;
+    memUsedMB: number;
+    memPct: number;
+    uptimeS: number;
+    diskFreeGB: number;
+    diskTotalGB: number;
+  };
+  reforgerServer: { installed: boolean; path: string | null; exePath: string | null };
+  steamcmd: { installed: boolean; path: string | null };
+  receivedAt: number;
+}
+
 export interface CkHost {
   hostId: string;
   version: string;
   connectedAt: string;
   state: 'online' | 'offline';
+  status: HostStatus | null;
 }
 
 export async function listHosts(token: string): Promise<CkHost[]> {
   const data = await authed<{ hosts: CkHost[] }>('/admin/hosts', token);
   return data.hosts;
+}
+
+export async function getHost(token: string, id: string): Promise<CkHost> {
+  return authed<CkHost>(`/admin/hosts/${encodeURIComponent(id)}`, token);
 }

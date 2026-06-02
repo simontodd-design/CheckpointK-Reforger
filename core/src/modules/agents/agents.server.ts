@@ -62,6 +62,27 @@ export type ServerStateHandler = (payload: ServerStatePayload) => void;
 /** Callback registered by LogsService to receive inbound log lines. */
 export type ServerLogHandler = (payload: { serverId: string; line: string; ts?: number }) => void;
 
+/** Callback registered by HostsService to receive inbound host status. */
+export type HostStatusHandler = (payload: HostStatusPayload) => void;
+
+export interface HostStatusPayload {
+  hostId: string;
+  agentVersion: string;
+  ts: number;
+  osInfo: { platform: string; release: string; hostname: string; arch: string };
+  metrics: {
+    cpuPct: number;
+    memTotalMB: number;
+    memUsedMB: number;
+    memPct: number;
+    uptimeS: number;
+    diskFreeGB: number;
+    diskTotalGB: number;
+  };
+  reforgerServer: { installed: boolean; path: string | null; exePath: string | null };
+  steamcmd: { installed: boolean; path: string | null };
+}
+
 @Injectable()
 export class AgentsServer implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AgentsServer.name);
@@ -69,6 +90,7 @@ export class AgentsServer implements OnModuleInit, OnModuleDestroy {
   private wss?: WebSocketServer;
   private stateHandler: ServerStateHandler | null = null;
   private logHandler: ServerLogHandler | null = null;
+  private statusHandler: HostStatusHandler | null = null;
 
   /**
    * Register a callback to receive `server:state` events from agents.
@@ -85,6 +107,14 @@ export class AgentsServer implements OnModuleInit, OnModuleDestroy {
    */
   setLogHandler(handler: ServerLogHandler): void {
     this.logHandler = handler;
+  }
+
+  /**
+   * Register a callback to receive periodic host:status events from
+   * agents. HostsService calls this in its onModuleInit.
+   */
+  setStatusHandler(handler: HostStatusHandler): void {
+    this.statusHandler = handler;
   }
 
   onModuleInit() {
@@ -158,9 +188,20 @@ export class AgentsServer implements OnModuleInit, OnModuleDestroy {
       case 'log:line':
         this.onLogLine(agent, msg.data as { serverId: string; line: string; ts?: number });
         break;
+      case 'host:status':
+        this.onHostStatus(agent, msg.data as HostStatusPayload);
+        break;
       default:
         this.logger.warn({ event: msg.event, hostId: agent.hostId }, 'unhandled event');
     }
+  }
+
+  private onHostStatus(agent: ConnectedAgent, payload: HostStatusPayload) {
+    if (!payload?.hostId) {
+      this.logger.warn({ hostId: agent.hostId }, 'malformed host:status');
+      return;
+    }
+    this.statusHandler?.(payload);
   }
 
   private onLogLine(
