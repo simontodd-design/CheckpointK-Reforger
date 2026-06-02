@@ -39,9 +39,10 @@ async function bootstrap() {
   await app.listen(port);
 
   const wsPort = Number(process.env.CK_WS_PORT ?? 3002);
-  console.log(`[CK Core] listening on http://localhost:${port}`);
-  console.log(`[CK Core] manager UI at  http://localhost:${port}/manager`);
-  console.log(`[CK Core] agent WS at    ws://localhost:${wsPort}/agents`);
+  console.log(`[CK Core] API listening on http://localhost:${port}`);
+  console.log(`[CK Core] agent WS at      ws://localhost:${wsPort}/agents`);
+  console.log(`[CK Core] launcher dev →   http://localhost:1420 (run \`bun run tauri dev\` in /launcher)`);
+  console.log(`[CK Core] manager dev →    http://localhost:5173 (run \`bun run dev\` in /manager)`);
 }
 
 bootstrap().catch(async (err) => {

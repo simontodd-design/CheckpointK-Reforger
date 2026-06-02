@@ -66,7 +66,7 @@
       <h1 class="display">Servers.</h1>
       <p class="sub">Reforger dedicated server instances. Click a row for detail.</p>
     </div>
-    <button class="cta" type="button" disabled>+ New server</button>
+    <a href="/servers/new" class="cta">+ New server</a>
   </header>
 
   {#if loading}
@@ -171,7 +171,10 @@
     color: #f4fafc;
     cursor: pointer;
     font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
   }
+  .cta:hover { border-color: #4fcfdf; background: rgba(79,207,223,0.16); }
   .cta:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .grid {

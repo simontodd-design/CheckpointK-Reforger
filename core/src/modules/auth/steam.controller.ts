@@ -22,6 +22,7 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Response, Request } from 'express';
+import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { SteamService } from './steam.service';
 
@@ -32,6 +33,7 @@ export class SteamController {
   constructor(
     private readonly steam: SteamService,
     private readonly auth: AuthService,
+    private readonly users: UsersService,
   ) {}
 
   /** Launcher → server: "I'm about to start a Steam auth, give me a state." */
@@ -78,10 +80,17 @@ export class SteamController {
     try {
       const steamId = await this.steam.verifyAssertion(params);
       const profile = await this.steam.fetchProfile(steamId);
+
+      // Persist / refresh the user row. Returned `user.isAdmin` will be
+      // honoured by AdminGuard from here on.
+      const user = await this.users.upsertFromSteam(profile);
+
       this.logger.log(
         {
           steamId,
           personaName: profile.personaName,
+          userId: user.id,
+          isAdmin: user.isAdmin,
           fp: state ? this.auth.fingerprint(state) : null,
         },
         'steam auth ok',

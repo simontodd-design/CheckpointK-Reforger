@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Get,
   NotFoundException,
@@ -8,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AdminGuard } from '../../common/auth/admin.guard';
-import { ServersService } from './servers.service';
+import { ServersService, type CreateServerInput } from './servers.service';
 
 @Controller('admin/servers')
 @UseGuards(AdminGuard)
@@ -20,6 +21,14 @@ export class ServersController {
     return { servers: this.servers.list() };
   }
 
+  @Post()
+  create(@Body() body: CreateServerInput) {
+    if (!body || typeof body !== 'object') {
+      throw new BadRequestException('JSON body required');
+    }
+    return this.servers.create(body);
+  }
+
   @Get(':id')
   async get(@Param('id') id: string) {
     const s = this.servers.get(id);
@@ -29,28 +38,16 @@ export class ServersController {
 
   @Post(':id/start')
   async start(@Param('id') id: string) {
-    try {
-      return await this.servers.start(id);
-    } catch (err) {
-      throw new BadRequestException(err instanceof Error ? err.message : String(err));
-    }
+    return await this.servers.start(id);
   }
 
   @Post(':id/stop')
   async stop(@Param('id') id: string) {
-    try {
-      return await this.servers.stop(id);
-    } catch (err) {
-      throw new BadRequestException(err instanceof Error ? err.message : String(err));
-    }
+    return await this.servers.stop(id);
   }
 
   @Post(':id/restart')
   async restart(@Param('id') id: string) {
-    try {
-      return await this.servers.restart(id);
-    } catch (err) {
-      throw new BadRequestException(err instanceof Error ? err.message : String(err));
-    }
+    return await this.servers.restart(id);
   }
 }

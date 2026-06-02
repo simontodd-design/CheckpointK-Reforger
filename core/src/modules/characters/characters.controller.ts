@@ -8,8 +8,9 @@ export class CharactersController {
   constructor(private readonly chars: CharactersService) {}
 
   @Get()
-  list(@Req() req: RequestWithUser) {
+  async list(@Req() req: RequestWithUser) {
     const steamId = req.user.sub;
-    return { characters: this.chars.list(steamId) };
+    const list = await this.chars.listForSteamId(steamId);
+    return { characters: list };
   }
 }

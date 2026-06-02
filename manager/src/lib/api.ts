@@ -119,6 +119,36 @@ export async function listServers(token: string): Promise<CkServer[]> {
   return data.servers;
 }
 
+export interface CreateServerInput {
+  name: string;
+  mapId: string;
+  hostId: string;
+  port: number;
+  capacity: number;
+}
+
+export async function createServer(token: string, input: CreateServerInput): Promise<CkServer> {
+  return authed<CkServer>('/admin/servers', token, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export interface MapOption {
+  id: string;
+  name: string;
+  difficulty: 'low' | 'medium' | 'high';
+}
+
+// Hardcoded for v1 — matches /maps but doesn't require player JWT scope.
+// When we add a /admin/maps endpoint this becomes a real fetch.
+export const availableMaps: MapOption[] = [
+  { id: 'arland', name: 'Arland', difficulty: 'low' },
+  { id: 'everon', name: 'Everon', difficulty: 'medium' },
+  { id: 'kolguyev', name: 'Kolguyev', difficulty: 'high' },
+];
+
 export async function getServer(token: string, id: string): Promise<CkServer> {
   return authed<CkServer>(`/admin/servers/${encodeURIComponent(id)}`, token);
 }

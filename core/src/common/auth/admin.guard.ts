@@ -1,12 +1,14 @@
 /**
  * Admin auth guard.
  *
- * Extends JwtAuthGuard semantics by also requiring that the verified
- * steam_id appears in the CK_ADMIN_STEAM_IDS env (comma-separated).
+ * Verifies the Bearer JWT (same as JwtAuthGuard) and then checks the
+ * verified Steam ID against `users.is_admin` in the database. Falls
+ * back to the CK_ADMIN_STEAM_IDS env allowlist for first-time bootstrap
+ * (before the user row exists yet).
  *
- * Used to gate every CK Manager endpoint — only listed operators can
- * see server state or issue spawn/kill commands. The launcher's player
- * endpoints (/characters, /maps) keep the lighter JwtAuthGuard.
+ * Used on every CK Manager endpoint — only admins can see server state
+ * or issue spawn/kill commands. The launcher's player endpoints keep
+ * the lighter JwtAuthGuard.
  */
 import {
   CanActivate,
@@ -17,15 +19,19 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService, type CkClaims } from '../../modules/auth/auth.service';
+import { UsersService } from '../../modules/users/users.service';
 import type { RequestWithUser } from './jwt-auth.guard';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
   private readonly logger = new Logger(AdminGuard.name);
 
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly users: UsersService,
+  ) {}
 
-  canActivate(ctx: ExecutionContext): boolean {
+  async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const req = ctx.switchToHttp().getRequest<RequestWithUser>();
     const header = req.headers.authorization ?? '';
     const match = /^Bearer\s+(.+)$/i.exec(header);
@@ -41,11 +47,8 @@ export class AdminGuard implements CanActivate {
     }
     req.user = claims;
 
-    const adminList = (process.env.CK_ADMIN_STEAM_IDS ?? '')
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (!adminList.includes(claims.sub)) {
+    const ok = await this.users.isAdmin(claims.sub);
+    if (!ok) {
       this.logger.warn(
         { steamId: claims.sub, persona: claims.persona },
         'non-admin attempted to access admin endpoint',

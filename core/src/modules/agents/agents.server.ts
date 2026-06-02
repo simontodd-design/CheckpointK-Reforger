@@ -17,12 +17,36 @@
  *   - Stream Reforger logs back to CK Manager UI
  */
 import type { IncomingMessage } from 'node:http';
-import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  type OnModuleDestroy,
+  type OnModuleInit,
+} from '@nestjs/common';
 import { WebSocket, WebSocketServer } from 'ws';
+
+// ServerState is duplicated here intentionally — importing it from
+// ServersService would create a circular runtime import. The two states
+// must stay in sync; if you add states, update both.
+export type ServerState =
+  | 'stopped'
+  | 'starting'
+  | 'running'
+  | 'stopping'
+  | 'crashed'
+  | 'updating';
 
 interface HelloPayload {
   hostId: string;
   version: string;
+}
+
+export interface ServerStatePayload {
+  serverId: string;
+  state: ServerState;
+  pid?: number | null;
+  error?: string | null;
+  players?: number;
 }
 
 interface ConnectedAgent {
@@ -32,11 +56,24 @@ interface ConnectedAgent {
   version?: string;
 }
 
+/** Callback registered by ServersService to receive inbound state events. */
+export type ServerStateHandler = (payload: ServerStatePayload) => void;
+
 @Injectable()
 export class AgentsServer implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AgentsServer.name);
   private readonly agents = new Map<WebSocket, ConnectedAgent>();
   private wss?: WebSocketServer;
+  private stateHandler: ServerStateHandler | null = null;
+
+  /**
+   * Register a callback to receive `server:state` events from agents.
+   * ServersService calls this in its onModuleInit — avoids a circular
+   * dependency between the two providers.
+   */
+  setStateHandler(handler: ServerStateHandler): void {
+    this.stateHandler = handler;
+  }
 
   onModuleInit() {
     const port = Number(process.env.CK_WS_PORT ?? 3002);
@@ -103,9 +140,24 @@ export class AgentsServer implements OnModuleInit, OnModuleDestroy {
       case 'hello':
         this.onHello(socket, agent, msg.data as HelloPayload);
         break;
+      case 'server:state':
+        this.onServerState(agent, msg.data as ServerStatePayload);
+        break;
       default:
         this.logger.warn({ event: msg.event, hostId: agent.hostId }, 'unhandled event');
     }
+  }
+
+  private onServerState(agent: ConnectedAgent, payload: ServerStatePayload) {
+    if (!payload?.serverId || !payload?.state) {
+      this.logger.warn({ payload, hostId: agent.hostId }, 'malformed server:state');
+      return;
+    }
+    if (!this.stateHandler) {
+      this.logger.warn('no stateHandler registered — dropping server:state');
+      return;
+    }
+    this.stateHandler(payload);
   }
 
   private onHello(socket: WebSocket, agent: ConnectedAgent, payload: HelloPayload) {
