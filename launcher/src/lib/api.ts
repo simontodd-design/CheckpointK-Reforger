@@ -154,6 +154,7 @@ export interface MapInfo {
   capacity: number;
   status: 'online' | 'offline' | 'maintenance';
   unlocked: boolean;
+  server: string; // ip:port for Reforger -connect
 }
 
 export async function listMaps(token: string | null): Promise<MapInfo[]> {

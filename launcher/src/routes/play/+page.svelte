@@ -7,6 +7,7 @@
   } from '$lib/api';
   import { session } from '$lib/session.svelte';
   import { armaStore } from '$lib/arma.svelte';
+  import { launchReforger } from '$lib/arma';
 
   let characters = $state<Character[]>([]);
   let maps = $state<MapInfo[]>([]);
@@ -58,20 +59,30 @@
     }
   }
 
-  function enterWorld() {
+  let launchError = $state<string | null>(null);
+
+  async function enterWorld() {
     if (!canEnter || launching) return;
+    if (!armaStore.install || !selectedMap) return;
     launching = true;
-    // TODO bite 5: Tauri Rust command to spawn ArmaReforgerSteam.exe
-    // with `-client <serverIp>:<port>` and minimize launcher.
-    setTimeout(() => {
-      launching = false;
-      alert(
-        `[stub] Would launch Reforger:\n` +
-          `  character: ${selectedCharacter?.name}\n` +
-          `  map: ${selectedMap?.name}\n\n` +
-          `Tauri spawn command lands next bite.`,
+    launchError = null;
+    try {
+      const r = await launchReforger(
+        armaStore.install.exe_path,
+        selectedMap.server,
+        null,
       );
-    }, 600);
+      if (!r.ok) {
+        launchError = r.error ?? 'launch failed';
+      }
+      // Reforger spawn returns immediately — the game takes its own
+      // 30-60s to actually open. Leave the button in "Launching…" state
+      // briefly so it feels intentional.
+      setTimeout(() => (launching = false), 1500);
+    } catch (err) {
+      launchError = err instanceof Error ? err.message : String(err);
+      launching = false;
+    }
   }
 </script>
 
@@ -168,7 +179,10 @@
 
     <footer class="enter-bar">
       <div class="enter-info">
-        {#if !armaStore.isReady}
+        {#if launchError}
+          <span class="info-label warn">Launch failed</span>
+          <span class="info-hint launch-error">{launchError}</span>
+        {:else if !armaStore.isReady}
           <span class="info-label warn">Reforger</span>
           <span class="info-hint">
             Arma Reforger isn't detected. Set the install path in
@@ -180,6 +194,7 @@
             <strong>{selectedCharacter.name}</strong>
             &nbsp;&rarr;&nbsp;
             <strong>{selectedMap.name}</strong>
+            <span class="server-hint">via {selectedMap.server}</span>
           </span>
         {:else}
           <span class="info-hint">Pick a character and a map to continue.</span>
@@ -418,6 +433,19 @@
     border-bottom: 1px solid #2e5b72;
   }
   .inline-link:hover { border-color: #4fcfdf; }
+  .server-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #5fa0bc;
+    margin-left: 16px;
+    letter-spacing: 0.06em;
+  }
+  .launch-error {
+    font-family: 'JetBrains Mono', monospace;
+    font-style: normal;
+    color: #c97b70;
+    font-size: 11px;
+  }
 
   .enter-btn {
     padding: 14px 32px;

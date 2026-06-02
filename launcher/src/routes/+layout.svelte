@@ -156,9 +156,37 @@
 
   :global(*) { box-sizing: border-box; }
 
+  /* Custom scrollbar — brand-consistent, narrow, frost-cyan thumb */
+  :global(::-webkit-scrollbar) {
+    width: 10px;
+    height: 10px;
+  }
+  :global(::-webkit-scrollbar-track) {
+    background: rgba(0, 0, 0, 0.4);
+    border-left: 1px solid #1e3d4f;
+  }
+  :global(::-webkit-scrollbar-thumb) {
+    background: #2e5b72;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  :global(::-webkit-scrollbar-thumb:hover) {
+    background: #4fcfdf;
+    background-clip: padding-box;
+    border: 2px solid transparent;
+  }
+  :global(::-webkit-scrollbar-corner) {
+    background: rgba(0, 0, 0, 0.4);
+  }
+  /* Firefox fallback */
+  :global(*) {
+    scrollbar-width: thin;
+    scrollbar-color: #2e5b72 rgba(0, 0, 0, 0.4);
+  }
+
   .app {
     display: flex;
-    min-height: 100vh;
+    height: 100vh;          /* constrain to viewport so main can scroll */
     background: radial-gradient(ellipse at 20% 10%, #0f1b26 0%, #05080b 50%, #000 100%);
   }
 
@@ -170,6 +198,7 @@
     display: flex;
     flex-direction: column;
     padding: 24px 0 16px;
+    overflow-y: auto;
   }
 
   .brand {
@@ -268,11 +297,16 @@
 
   main {
     flex: 1;
+    min-width: 0;           /* allow flex child to shrink below content width */
     overflow-y: auto;
     overflow-x: hidden;
-    padding-bottom: 32px;
+    padding-bottom: 48px;   /* room for floating statusbar */
   }
-  main.no-sidebar { display: flex; align-items: center; justify-content: center; }
+  main.no-sidebar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
   .statusbar {
     position: fixed;

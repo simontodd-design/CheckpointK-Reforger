@@ -4,6 +4,11 @@
  * v1 maps are the three Reforger natives. Workshop maps come post-launch.
  * Status + player count will be real once the agent reports up to CK
  * Core via WebSocket; for now static.
+ *
+ * `server` is the address the launcher passes to Reforger via
+ * `-connect IP:PORT`. In dev these point at localhost; prod resolves
+ * to the per-map dedicated host (eu-west-arland, eu-west-everon, etc.)
+ * via DNS so we can shift hosts without redeploying the launcher.
  */
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
@@ -18,6 +23,7 @@ interface MapInfo {
   capacity: number;
   status: 'online' | 'offline' | 'maintenance';
   unlocked: boolean;
+  server: string; // ip:port for Reforger -connect
 }
 
 @Controller('maps')
@@ -37,6 +43,7 @@ export class MapsController {
         capacity: 80,
         status: 'online',
         unlocked: true,
+        server: '127.0.0.1:2001',
       },
       {
         id: 'everon',
@@ -49,6 +56,7 @@ export class MapsController {
         capacity: 150,
         status: 'online',
         unlocked: true,
+        server: '127.0.0.1:2002',
       },
       {
         id: 'kolguyev',
@@ -61,6 +69,7 @@ export class MapsController {
         capacity: 80,
         status: 'online',
         unlocked: true,
+        server: '127.0.0.1:2003',
       },
     ];
     return { maps };

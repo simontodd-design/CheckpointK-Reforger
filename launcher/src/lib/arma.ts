@@ -27,6 +27,24 @@ export interface ValidationResult {
   error: string | null;
 }
 
+export interface LaunchResult {
+  ok: boolean;
+  pid: number | null;
+  error: string | null;
+}
+
+export async function launchReforger(
+  exePath: string,
+  server: string | null,
+  password: string | null = null,
+): Promise<LaunchResult> {
+  return invoke<LaunchResult>('launch_reforger', {
+    exePath,
+    server,
+    password,
+  });
+}
+
 export async function detectArmaInstall(): Promise<DetectionResult> {
   return invoke<DetectionResult>('detect_arma_install');
 }

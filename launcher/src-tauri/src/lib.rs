@@ -1,4 +1,5 @@
 mod arma;
+mod launch;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -8,6 +9,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             arma::detect_arma_install,
             arma::validate_arma_path,
+            launch::launch_reforger,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
