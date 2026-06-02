@@ -19,6 +19,22 @@ async function bootstrap() {
   app.useLogger(app.get(PinoLogger));
   app.enableShutdownHooks();
 
+  // CORS — allow launcher (Tauri webview) + manager UI + local dev
+  // Origins:
+  //   http://localhost:1420 — Tauri webview in dev (Vite dev server)
+  //   http://localhost:5173 — manager SvelteKit dev server
+  //   tauri://localhost     — Tauri webview in production builds (Windows)
+  //   https://tauri.localhost — Tauri webview in production (alt protocol)
+  app.enableCors({
+    origin: [
+      'http://localhost:1420',
+      'http://localhost:5173',
+      'tauri://localhost',
+      'https://tauri.localhost',
+    ],
+    credentials: true,
+  });
+
   const port = Number(process.env.CK_CORE_PORT ?? 3001);
   await app.listen(port);
 

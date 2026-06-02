@@ -1,13 +1,36 @@
 <script lang="ts">
   import { getVersion } from '@tauri-apps/api/app';
+  import { getHealth, type HealthResponse } from '$lib/api';
 
-  let version = $state('0.0.1');
+  let launcherVersion = $state('0.0.1');
+  let coreState = $state<'connecting' | 'ok' | 'down'>('connecting');
+  let coreInfo = $state<HealthResponse | null>(null);
+  let coreError = $state<string | null>(null);
 
   $effect(() => {
     void getVersion()
-      .then((v) => (version = v))
+      .then((v) => (launcherVersion = v))
       .catch(() => {});
   });
+
+  $effect(() => {
+    void refreshHealth();
+    const interval = setInterval(() => void refreshHealth(), 30_000);
+    return () => clearInterval(interval);
+  });
+
+  async function refreshHealth() {
+    const result = await getHealth();
+    if (result.ok && result.data) {
+      coreState = 'ok';
+      coreInfo = result.data;
+      coreError = null;
+    } else {
+      coreState = 'down';
+      coreInfo = null;
+      coreError = result.error ?? 'unknown error';
+    }
+  }
 </script>
 
 <main>
@@ -18,16 +41,31 @@
     <p class="tagline">The cold is the easy part.</p>
 
     <div class="actions">
-      <button class="cta" type="button">Sign in with Steam</button>
+      <button class="cta" type="button" disabled={coreState !== 'ok'}>
+        Sign in with Steam
+      </button>
       <button class="ghost" type="button">Continue without account</button>
     </div>
 
     <div class="footer">
-      <span class="version">Launcher v{version}</span>
+      <span class="version">Launcher v{launcherVersion}</span>
       <span class="dot">·</span>
       <span class="version">Mod &mdash;</span>
       <span class="dot">·</span>
-      <span class="version">Core not connected</span>
+
+      {#if coreState === 'connecting'}
+        <span class="version connecting">Core connecting&hellip;</span>
+      {:else if coreState === 'ok' && coreInfo}
+        <span class="version ok">
+          <span class="indicator" aria-hidden="true"></span>
+          Core v{coreInfo.version}
+        </span>
+      {:else}
+        <span class="version down" title={coreError ?? ''}>
+          <span class="indicator" aria-hidden="true"></span>
+          Core unreachable
+        </span>
+      {/if}
     </div>
   </div>
 </main>
@@ -109,9 +147,15 @@
     color: #f4fafc;
     background: rgba(157, 208, 232, 0.08);
   }
-  .cta:hover {
+  .cta:hover:not(:disabled) {
     border-color: #4fcfdf;
     background: rgba(79, 207, 223, 0.12);
+  }
+  .cta:disabled {
+    border-color: #1e3d4f;
+    color: #5fa0bc;
+    background: transparent;
+    cursor: not-allowed;
   }
 
   .ghost {
@@ -140,5 +184,28 @@
 
   .version {
     color: #5fa0bc;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .indicator {
+    width: 6px;
+    height: 6px;
+    display: inline-block;
+  }
+
+  .ok .indicator {
+    background: #4fcfdf;
+  }
+  .down .indicator {
+    background: #8e382c;
+  }
+  .down {
+    color: #c97b70;
+  }
+  .connecting {
+    color: #5fa0bc;
+    opacity: 0.7;
   }
 </style>
