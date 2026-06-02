@@ -13,8 +13,10 @@ import { AgentsModule } from './modules/agents/agents.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CharactersModule } from './modules/characters/characters.module';
 import { HealthModule } from './modules/health/health.module';
+import { HostsModule } from './modules/hosts/hosts.module';
 import { MapsModule } from './modules/maps/maps.module';
 import { NewsModule } from './modules/news/news.module';
+import { ServersModule } from './modules/servers/servers.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { NewsModule } from './modules/news/news.module';
     CharactersModule,
     MapsModule,
     NewsModule,
+    ServersModule,
+    HostsModule,
   ],
 })
 export class AppModule {}
