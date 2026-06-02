@@ -1,156 +1,144 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
+  import { getVersion } from '@tauri-apps/api/app';
 
-  let name = $state("");
-  let greetMsg = $state("");
+  let version = $state('0.0.1');
 
-  async function greet(event: Event) {
-    event.preventDefault();
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsg = await invoke("greet", { name });
-  }
+  $effect(() => {
+    void getVersion()
+      .then((v) => (version = v))
+      .catch(() => {});
+  });
 </script>
 
-<main class="container">
-  <h1>Welcome to Tauri + Svelte</h1>
+<main>
+  <div class="frame">
+    <img src="/CKlogo.png" alt="CK" class="logo" />
 
-  <div class="row">
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
-    </a>
-    <a href="https://tauri.app" target="_blank">
-      <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank">
-      <img src="/svelte.svg" class="logo svelte-kit" alt="SvelteKit Logo" />
-    </a>
+    <h1 class="display">Checkpoint K</h1>
+    <p class="tagline">The cold is the easy part.</p>
+
+    <div class="actions">
+      <button class="cta" type="button">Sign in with Steam</button>
+      <button class="ghost" type="button">Continue without account</button>
+    </div>
+
+    <div class="footer">
+      <span class="version">Launcher v{version}</span>
+      <span class="dot">·</span>
+      <span class="version">Mod &mdash;</span>
+      <span class="dot">·</span>
+      <span class="version">Core not connected</span>
+    </div>
   </div>
-  <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
-
-  <form class="row" onsubmit={greet}>
-    <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
-    <button type="submit">Greet</button>
-  </form>
-  <p>{greetMsg}</p>
 </main>
 
 <style>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.svelte-kit:hover {
-  filter: drop-shadow(0 0 2em #ff3e00);
-}
-
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
+  :global(body) {
+    margin: 0;
+    background: #000000;
+    color: #f4fafc;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
   }
 
-  a:hover {
-    color: #24c8db;
+  main {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 50% 40%, #0f1b26 0%, #05080b 60%, #000000 100%);
+    padding: 32px;
   }
 
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
+  .frame {
+    text-align: center;
+    max-width: 480px;
   }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
 
+  .logo {
+    width: 220px;
+    height: 220px;
+    object-fit: contain;
+    margin-bottom: 24px;
+    opacity: 0.95;
+  }
+
+  .display {
+    font-family: 'Cinzel', 'Spectral SC', Georgia, serif;
+    font-size: 40px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: #f4fafc;
+    margin: 0 0 10px;
+    line-height: 1;
+  }
+
+  .tagline {
+    font-size: 14px;
+    color: #5fa0bc;
+    letter-spacing: 0.04em;
+    font-style: italic;
+    margin: 0 0 40px;
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 280px;
+    margin: 0 auto 56px;
+  }
+
+  .cta,
+  .ghost {
+    padding: 12px 20px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    font-family: inherit;
+    border: 1px solid;
+    background: transparent;
+    cursor: pointer;
+    transition: all 120ms ease-out;
+  }
+
+  .cta {
+    border-color: #9dd0e8;
+    color: #f4fafc;
+    background: rgba(157, 208, 232, 0.08);
+  }
+  .cta:hover {
+    border-color: #4fcfdf;
+    background: rgba(79, 207, 223, 0.12);
+  }
+
+  .ghost {
+    border-color: #2e5b72;
+    color: #b9deeb;
+  }
+  .ghost:hover {
+    border-color: #5fa0bc;
+    color: #f4fafc;
+  }
+
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+    font-size: 10px;
+    letter-spacing: 0.10em;
+    color: #2e5b72;
+  }
+
+  .dot {
+    color: #1e3d4f;
+  }
+
+  .version {
+    color: #5fa0bc;
+  }
 </style>
